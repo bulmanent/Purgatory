@@ -2,8 +2,17 @@
     <string name="app_name">Meditation Timer</string>
     <string name="duration_label">Duration (minutes)</string>
     <string name="interval_label">Interval (minutes, 0 for none)</string>
+    <string name="entrainment_audio">Entrainment audio</string>
+    <string name="select_entrainment_audio">Select Entrainment Audio</string>
+    <string name="entrainment_none">No entrainment audio selected</string>
+    <string name="clear_entrainment_audio">Clear Entrainment Audio</string>
+    <string name="entrainment_volume">Entrainment volume</string>
+    <string name="entrainment_mute">Mute entrainment</string>
     <string name="select_music">Select Background Music</string>
     <string name="music_none">No music selected</string>
+    <string name="clear_music">Clear Background Music</string>
+    <string name="music_volume">Music volume</string>
+    <string name="music_mute">Mute music</string>
     <string name="chime_none">No chime selected</string>
     <string name="start">Start</string>
     <string name="pause">Pause</string>

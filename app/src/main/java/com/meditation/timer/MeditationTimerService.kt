@@ -30,11 +30,15 @@ class MeditationTimerService : Service() {
     private var totalSeconds: Long = 0L
     private var remainingSeconds: Long = 0L
     private var intervalSeconds: Long = 0L
+    private var entrainmentUri: String? = null
+    private var entrainmentVolume: Float = 1.0f
     private var musicUri: String? = null
+    private var musicVolume: Float = 1.0f
     private var startChimeUri: String? = null
     private var intervalChimeUri: String? = null
     private var endChimeUri: String? = null
 
+    private var entrainmentPlayer: MediaPlayer? = null
     private var backgroundPlayer: MediaPlayer? = null
 
     private val tickRunnable = object : Runnable {
@@ -88,7 +92,10 @@ class MeditationTimerService : Service() {
         totalSeconds = durationMinutes * 60L
         remainingSeconds = totalSeconds
         intervalSeconds = intervalMinutes * 60L
+        entrainmentUri = intent.getStringExtra(EXTRA_ENTRAINMENT_URI)
+        entrainmentVolume = intent.getFloatExtra(EXTRA_ENTRAINMENT_VOLUME, 1.0f)
         musicUri = intent.getStringExtra(EXTRA_MUSIC_URI)
+        musicVolume = intent.getFloatExtra(EXTRA_MUSIC_VOLUME, 1.0f)
         startChimeUri = intent.getStringExtra(EXTRA_START_CHIME)
         intervalChimeUri = intent.getStringExtra(EXTRA_INTERVAL_CHIME)
         endChimeUri = intent.getStringExtra(EXTRA_END_CHIME)
@@ -97,6 +104,7 @@ class MeditationTimerService : Service() {
         acquireWakeLock()
         startForeground(NOTIFICATION_ID, buildNotification())
         playChime(startChimeUri)
+        startEntrainmentAudio(entrainmentUri)
         startBackgroundMusic(musicUri)
         handler.removeCallbacks(tickRunnable)
         handler.postDelayed(tickRunnable, 1000L)
@@ -109,6 +117,7 @@ class MeditationTimerService : Service() {
         }
         currentState = TimerState.PAUSED
         handler.removeCallbacks(tickRunnable)
+        entrainmentPlayer?.pause()
         backgroundPlayer?.pause()
         updateNotification()
         broadcastTick()
@@ -119,6 +128,7 @@ class MeditationTimerService : Service() {
             return
         }
         currentState = TimerState.RUNNING
+        entrainmentPlayer?.start()
         backgroundPlayer?.start()
         handler.removeCallbacks(tickRunnable)
         handler.postDelayed(tickRunnable, 1000L)
@@ -131,6 +141,7 @@ class MeditationTimerService : Service() {
         handler.removeCallbacks(tickRunnable)
         releaseWakeLock()
         stopBackgroundMusic()
+        stopEntrainmentAudio()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
         broadcastTick()
@@ -156,6 +167,7 @@ class MeditationTimerService : Service() {
                 setAudioAttributes(audioAttributes)
                 setDataSource(this@MeditationTimerService, uri)
                 isLooping = true
+                setVolume(musicVolume, musicVolume)
                 prepare()
                 start()
             }
@@ -168,6 +180,36 @@ class MeditationTimerService : Service() {
         backgroundPlayer?.stop()
         backgroundPlayer?.release()
         backgroundPlayer = null
+    }
+
+    private fun startEntrainmentAudio(uriString: String?) {
+        stopEntrainmentAudio()
+        if (uriString.isNullOrBlank()) {
+            return
+        }
+        val uri = Uri.parse(uriString)
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            .build()
+        try {
+            entrainmentPlayer = MediaPlayer().apply {
+                setAudioAttributes(audioAttributes)
+                setDataSource(this@MeditationTimerService, uri)
+                isLooping = true
+                setVolume(entrainmentVolume, entrainmentVolume)
+                prepare()
+                start()
+            }
+        } catch (exception: Exception) {
+            stopEntrainmentAudio()
+        }
+    }
+
+    private fun stopEntrainmentAudio() {
+        entrainmentPlayer?.stop()
+        entrainmentPlayer?.release()
+        entrainmentPlayer = null
     }
 
     private fun playChime(uriString: String?) {
@@ -266,11 +308,30 @@ class MeditationTimerService : Service() {
         handler.removeCallbacks(tickRunnable)
         releaseWakeLock()
         stopBackgroundMusic()
+        stopEntrainmentAudio()
         super.onDestroy()
     }
 
     inner class LocalBinder : Binder() {
         fun getService(): MeditationTimerService = this@MeditationTimerService
+    }
+
+    fun setEntrainmentVolume(volume: Float) {
+        entrainmentVolume = volume
+        entrainmentPlayer?.setVolume(volume, volume)
+    }
+
+    fun setMusicVolume(volume: Float) {
+        musicVolume = volume
+        backgroundPlayer?.setVolume(volume, volume)
+    }
+
+    fun stopEntrainmentPlayback() {
+        stopEntrainmentAudio()
+    }
+
+    fun stopMusicPlayback() {
+        stopBackgroundMusic()
     }
 
     enum class TimerState {
@@ -288,7 +349,10 @@ class MeditationTimerService : Service() {
 
         const val EXTRA_DURATION_MINUTES = "extra_duration_minutes"
         const val EXTRA_INTERVAL_MINUTES = "extra_interval_minutes"
+        const val EXTRA_ENTRAINMENT_URI = "extra_entrainment_uri"
+        const val EXTRA_ENTRAINMENT_VOLUME = "extra_entrainment_volume"
         const val EXTRA_MUSIC_URI = "extra_music_uri"
+        const val EXTRA_MUSIC_VOLUME = "extra_music_volume"
         const val EXTRA_START_CHIME = "extra_start_chime"
         const val EXTRA_INTERVAL_CHIME = "extra_interval_chime"
         const val EXTRA_END_CHIME = "extra_end_chime"
