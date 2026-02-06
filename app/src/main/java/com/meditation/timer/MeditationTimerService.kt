@@ -394,9 +394,9 @@ class MeditationTimerService : Service() {
     }
 
     private fun applyMetronomeTone() {
-        val (normal, accent) = MetronomeToneOptions.options.getOrNull(metronomeToneIndex)
+        val option = MetronomeToneOptions.options.getOrNull(metronomeToneIndex)
             ?: MetronomeToneOptions.options.first()
-        metronomeManager?.setTone(normal, accent)
+        metronomeManager?.setTone(option.normalTone, option.accentTone)
     }
 
     private fun startMetronome(intent: Intent) {
