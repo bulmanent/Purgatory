@@ -82,8 +82,8 @@ class MetronomeManager(
     private fun ensureClickTracks() {
         if (clickTrack != null && accentTrack != null) return
         val sampleRate = 44100
-        clickTrack = buildClickTrack(sampleRate, 0.7f)
-        accentTrack = buildClickTrack(sampleRate, 1.0f)
+        clickTrack = buildClickTrack(sampleRate, 1.0f)
+        accentTrack = buildClickTrack(sampleRate, 1.08f)
         applyVolumeToTracks()
     }
 
@@ -117,12 +117,12 @@ class MetronomeManager(
     }
 
     private fun buildClickTrack(sampleRate: Int, amplitude: Float): AudioTrack {
-        val durationMs = 32
+        val durationMs = 12
         val numSamples = (sampleRate * durationMs) / 1000
         val buffer = ShortArray(numSamples)
-        val decayRate = 8.0
-        val freq1 = 520.0
-        val freq2 = 860.0
+        val decayRate = 12.0
+        val freq1 = 1200.0
+        val freq2 = 2400.0
         for (i in 0 until numSamples) {
             val t = i.toDouble() / numSamples
             val envelope = (1.0 - t).pow(decayRate)
@@ -152,7 +152,7 @@ class MetronomeManager(
     }
 
     private fun applyVolumeToTracks() {
-        val clickVol = (volume * 0.8f).coerceIn(0f, 1f)
+        val clickVol = (volume * 0.98f).coerceIn(0f, 1f)
         val accentVol = (volume * 1.0f).coerceIn(0f, 1f)
         clickTrack?.setVolume(clickVol)
         accentTrack?.setVolume(accentVol)
