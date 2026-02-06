@@ -29,6 +29,7 @@ class MeditationTimerService : Service() {
     private var metronomeBpm = 90
     private var metronomeBeats = 4
     private var metronomeVolume = 1.0f
+    private var metronomeToneIndex = 0
 
     var currentState: TimerState = TimerState.IDLE
         private set
@@ -371,9 +372,16 @@ class MeditationTimerService : Service() {
 
     fun getMetronomeVolume(): Float = metronomeVolume
 
+    fun getMetronomeToneIndex(): Int = metronomeToneIndex
+
     fun setMetronomeVolume(volume: Float) {
         metronomeVolume = volume.coerceIn(0f, 1f)
         metronomeManager?.setVolume(metronomeVolume)
+    }
+
+    fun setMetronomeToneIndex(index: Int) {
+        metronomeToneIndex = index
+        applyMetronomeTone()
     }
 
     fun updateMetronome(bpm: Int, beats: Int) {
@@ -385,12 +393,20 @@ class MeditationTimerService : Service() {
         }
     }
 
+    private fun applyMetronomeTone() {
+        val (normal, accent) = MetronomeToneOptions.options.getOrNull(metronomeToneIndex)
+            ?: MetronomeToneOptions.options.first()
+        metronomeManager?.setTone(normal, accent)
+    }
+
     private fun startMetronome(intent: Intent) {
         metronomeBpm = intent.getIntExtra(EXTRA_METRONOME_BPM, metronomeBpm)
         metronomeBeats = intent.getIntExtra(EXTRA_METRONOME_BEATS, metronomeBeats)
         metronomeVolume = intent.getFloatExtra(EXTRA_METRONOME_VOLUME, metronomeVolume)
+        metronomeToneIndex = intent.getIntExtra(EXTRA_METRONOME_TONE_INDEX, metronomeToneIndex)
         metronomeManager?.configure(metronomeBpm, metronomeBeats)
         metronomeManager?.setVolume(metronomeVolume)
+        applyMetronomeTone()
         metronomeRunning = true
         metronomeManager?.start()
         ensureForeground()
@@ -451,6 +467,7 @@ class MeditationTimerService : Service() {
         const val EXTRA_METRONOME_BPM = "extra_metronome_bpm"
         const val EXTRA_METRONOME_BEATS = "extra_metronome_beats"
         const val EXTRA_METRONOME_VOLUME = "extra_metronome_volume"
+        const val EXTRA_METRONOME_TONE_INDEX = "extra_metronome_tone_index"
 
         private const val CHANNEL_ID = "meditation_timer"
         private const val NOTIFICATION_ID = 1001

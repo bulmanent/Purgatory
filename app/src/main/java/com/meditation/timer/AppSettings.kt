@@ -5,6 +5,7 @@ import android.content.Context
 object AppSettings {
     private const val PREFS_NAME = "meditation_timer_settings"
     const val KEY_KEEP_SCREEN_AWAKE = "keep_screen_awake"
+    const val KEY_METRONOME_TONE_INDEX = "metronome_tone_index"
 
     fun isKeepScreenAwakeEnabled(context: Context): Boolean {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -15,6 +16,18 @@ object AppSettings {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putBoolean(KEY_KEEP_SCREEN_AWAKE, enabled)
+            .apply()
+    }
+
+    fun getMetronomeToneIndex(context: Context): Int {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getInt(KEY_METRONOME_TONE_INDEX, 0)
+    }
+
+    fun setMetronomeToneIndex(context: Context, index: Int) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putInt(KEY_METRONOME_TONE_INDEX, index)
             .apply()
     }
 

@@ -35,6 +35,7 @@
     <string name="metronome_title">Metronome</string>
     <string name="metronome_bpm">Tempo (BPM)</string>
     <string name="metronome_beats_per_bar">Beats per bar</string>
+    <string name="metronome_tone">Metronome tone</string>
     <string name="metronome_volume">Metronome volume</string>
     <string name="metronome_start">Start metronome</string>
     <string name="metronome_stop">Stop metronome</string>

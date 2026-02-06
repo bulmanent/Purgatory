@@ -20,6 +20,8 @@ class MetronomeManager(
     private var beatIndex = 0
     private var running = false
     private var volume = 1.0f
+    private var toneNormal = ToneGenerator.TONE_PROP_BEEP
+    private var toneAccent = ToneGenerator.TONE_PROP_BEEP2
     private var audioFocusRequest: AudioFocusRequest? = null
     private var focusChangeListener: AudioManager.OnAudioFocusChangeListener? = null
 
@@ -40,6 +42,11 @@ class MetronomeManager(
     fun setVolume(volume: Float) {
         this.volume = volume.coerceIn(0f, 1f)
         recreateToneGeneratorIfNeeded()
+    }
+
+    fun setTone(normalTone: Int, accentTone: Int) {
+        toneNormal = normalTone
+        toneAccent = accentTone
     }
 
     fun start() {
@@ -89,11 +96,7 @@ class MetronomeManager(
     private fun playTick() {
         ensureToneGenerator()
         val isAccent = beatIndex % max(1, beatsPerBar) == 0
-        val tone = if (isAccent) {
-            ToneGenerator.TONE_PROP_BEEP2
-        } else {
-            ToneGenerator.TONE_PROP_BEEP
-        }
+        val tone = if (isAccent) toneAccent else toneNormal
         toneGenerator?.startTone(tone, 80)
         beatIndex = (beatIndex + 1) % max(1, beatsPerBar)
     }

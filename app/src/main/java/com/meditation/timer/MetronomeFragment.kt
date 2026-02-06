@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
@@ -19,6 +20,7 @@ class MetronomeFragment : Fragment() {
     private var service: MeditationTimerService? = null
     private var isBound = false
     private var suppressUpdates = false
+    private var toneIndex = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,6 +41,17 @@ class MetronomeFragment : Fragment() {
         binding.metronomeVolumeSlider.value = 100f
         binding.metronomeVolumeValue.text = "100%"
         updateStatus(false)
+
+        val toneLabels = MetronomeToneOptions.options.map { it.label }
+        val toneAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, toneLabels)
+        binding.metronomeToneDropdown.setAdapter(toneAdapter)
+        toneIndex = AppSettings.getMetronomeToneIndex(requireContext())
+        binding.metronomeToneDropdown.setText(toneLabels.getOrNull(toneIndex) ?: toneLabels.first(), false)
+        binding.metronomeToneDropdown.setOnItemClickListener { _, _, position, _ ->
+            toneIndex = position
+            AppSettings.setMetronomeToneIndex(requireContext(), position)
+            service?.setMetronomeToneIndex(position)
+        }
 
         binding.bpmSlider.addOnChangeListener { _, value, fromUser ->
             if (fromUser && !suppressUpdates) {
@@ -100,6 +113,7 @@ class MetronomeFragment : Fragment() {
                 putExtra(MeditationTimerService.EXTRA_METRONOME_BPM, bpm)
                 putExtra(MeditationTimerService.EXTRA_METRONOME_BEATS, beats)
                 putExtra(MeditationTimerService.EXTRA_METRONOME_VOLUME, volume)
+                putExtra(MeditationTimerService.EXTRA_METRONOME_TONE_INDEX, toneIndex)
             }
             ContextCompat.startForegroundService(requireContext(), intent)
             updateStatus(true)
@@ -165,6 +179,12 @@ class MetronomeFragment : Fragment() {
         val percent = (boundService.getMetronomeVolume() * 100).roundToInt().coerceIn(0, 100)
         binding.metronomeVolumeSlider.value = percent.toFloat()
         binding.metronomeVolumeValue.text = "$percent%"
+        toneIndex = boundService.getMetronomeToneIndex()
+        val toneLabels = MetronomeToneOptions.options.map { it.label }
+        binding.metronomeToneDropdown.setText(
+            toneLabels.getOrNull(toneIndex) ?: toneLabels.first(),
+            false
+        )
         suppressUpdates = false
         updateStatus(boundService.isMetronomeRunning())
     }
