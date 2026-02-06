@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import android.widget.ArrayAdapter
+import android.widget.Filter
+import android.widget.Filterable
 import androidx.fragment.app.Fragment
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
@@ -43,8 +45,15 @@ class MetronomeFragment : Fragment() {
         updateStatus(false)
 
         val toneLabels = MetronomeToneOptions.options.map { it.label }
-        val toneAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, toneLabels)
+        val toneAdapter = NoFilterArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_list_item_1,
+            toneLabels
+        )
         binding.metronomeToneDropdown.setAdapter(toneAdapter)
+        binding.metronomeToneDropdown.setOnClickListener {
+            binding.metronomeToneDropdown.showDropDown()
+        }
         toneIndex = AppSettings.getMetronomeToneIndex(requireContext())
         binding.metronomeToneDropdown.setText(toneLabels.getOrNull(toneIndex) ?: toneLabels.first())
         binding.metronomeToneDropdown.setOnItemClickListener { _, _, position, _ ->
@@ -195,5 +204,32 @@ class MetronomeFragment : Fragment() {
         val beats = binding.beatsPerBarInput.text?.toString()?.toIntOrNull() ?: return
         if (bpm !in 30..200 || beats !in 1..12) return
         boundService.updateMetronome(bpm, beats)
+    }
+
+    private class NoFilterArrayAdapter(
+        context: Context,
+        layoutRes: Int,
+        items: List<String>
+    ) : ArrayAdapter<String>(context, layoutRes, items), Filterable {
+        private val allItems = items.toList()
+
+        override fun getFilter(): Filter {
+            return object : Filter() {
+                override fun performFiltering(constraint: CharSequence?): FilterResults {
+                    return FilterResults().apply {
+                        values = allItems
+                        count = allItems.size
+                    }
+                }
+
+                override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+                    clear()
+                    @Suppress("UNCHECKED_CAST")
+                    val values = results?.values as? List<String> ?: emptyList()
+                    addAll(values)
+                    notifyDataSetChanged()
+                }
+            }
+        }
     }
 }
