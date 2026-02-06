@@ -29,8 +29,18 @@ class PresetManager(context: Context) {
         return loadPresets().firstOrNull { it.name == name }
     }
 
+    fun saveDefaultPreset(preset: Preset) {
+        prefs.edit().putString(KEY_DEFAULT_PRESET, gson.toJson(preset)).apply()
+    }
+
+    fun loadDefaultPreset(): Preset? {
+        val json = prefs.getString(KEY_DEFAULT_PRESET, null) ?: return null
+        return gson.fromJson(json, Preset::class.java)
+    }
+
     companion object {
         private const val PREFS_NAME = "meditation_presets"
         private const val KEY_PRESETS = "presets_json"
+        private const val KEY_DEFAULT_PRESET = "default_preset_json"
     }
 }

@@ -188,6 +188,9 @@ class MainActivity : AppCompatActivity() {
         binding.loadPresetButton.setOnClickListener {
             loadPreset()
         }
+        binding.saveDefaultButton.setOnClickListener {
+            saveDefaultPreset()
+        }
         binding.entrainmentVolumeSlider.addOnChangeListener { _, value, fromUser ->
             if (fromUser && isEntrainmentMuted) {
                 binding.entrainmentMuteCheckbox.isChecked = false
@@ -234,6 +237,10 @@ class MainActivity : AppCompatActivity() {
                 != PackageManager.PERMISSION_GRANTED) {
                 requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
+        }
+
+        presetManager.loadDefaultPreset()?.let { defaultPreset ->
+            applyPreset(defaultPreset)
         }
     }
 
@@ -395,6 +402,31 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun saveDefaultPreset() {
+        val duration = binding.durationInput.text?.toString()?.toIntOrNull() ?: 0
+        val interval = binding.intervalInput.text?.toString()?.toIntOrNull() ?: 0
+        if (duration < 1) {
+            Toast.makeText(this, "Duration must be at least 1 minute.", Toast.LENGTH_LONG).show()
+            return
+        }
+        val preset = Preset(
+            name = "Default",
+            durationMinutes = duration,
+            intervalMinutes = interval,
+            entrainmentUri = currentEntrainmentUri?.toString(),
+            entrainmentVolume = binding.entrainmentVolumeSlider.value,
+            entrainmentMuted = isEntrainmentMuted,
+            musicUri = currentMusicUri?.toString(),
+            musicVolume = binding.musicVolumeSlider.value,
+            musicMuted = isMusicMuted,
+            startChimeUri = currentStartChimeUri?.toString(),
+            intervalChimeUri = currentIntervalChimeUri?.toString(),
+            endChimeUri = currentEndChimeUri?.toString()
+        )
+        presetManager.saveDefaultPreset(preset)
+        Toast.makeText(this, "Default saved.", Toast.LENGTH_LONG).show()
+    }
+
     private fun loadPreset() {
         val presets = presetManager.loadPresets()
         if (presets.isEmpty()) {
@@ -406,36 +438,44 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Load preset")
             .setItems(names) { _, which ->
                 val preset = presets[which]
-                binding.durationInput.setText(preset.durationMinutes.toString())
-                binding.intervalInput.setText(preset.intervalMinutes.toString())
-                currentEntrainmentUri = preset.entrainmentUri?.let { Uri.parse(it) }
-                binding.entrainmentFilename.text =
-                    currentEntrainmentUri?.lastPathSegment ?: getString(R.string.entrainment_none)
-                binding.entrainmentVolumeSlider.value = preset.entrainmentVolume ?: 1.0f
-                binding.entrainmentVolumeValue.text =
-                    formatVolumePercent(binding.entrainmentVolumeSlider.value, isEntrainmentMuted)
-                isEntrainmentMuted = preset.entrainmentMuted ?: false
-                binding.entrainmentMuteCheckbox.isChecked = isEntrainmentMuted
-                binding.entrainmentVolumeSlider.alpha = if (isEntrainmentMuted) 0.5f else 1.0f
-                currentMusicUri = preset.musicUri?.let { Uri.parse(it) }
-                binding.musicFilename.text = currentMusicUri?.lastPathSegment ?: getString(R.string.music_none)
-                binding.musicVolumeSlider.value = preset.musicVolume ?: 1.0f
-                binding.musicVolumeValue.text =
-                    formatVolumePercent(binding.musicVolumeSlider.value, isMusicMuted)
-                isMusicMuted = preset.musicMuted ?: false
-                binding.musicMuteCheckbox.isChecked = isMusicMuted
-                binding.musicVolumeSlider.alpha = if (isMusicMuted) 0.5f else 1.0f
-                currentStartChimeUri = preset.startChimeUri?.let { Uri.parse(it) }
-                currentIntervalChimeUri = preset.intervalChimeUri?.let { Uri.parse(it) }
-                currentEndChimeUri = preset.endChimeUri?.let { Uri.parse(it) }
-                binding.startChimeFilename.text =
-                    currentStartChimeUri?.lastPathSegment ?: getString(R.string.chime_none)
-                binding.intervalChimeFilename.text =
-                    currentIntervalChimeUri?.lastPathSegment ?: getString(R.string.chime_none)
-                binding.endChimeFilename.text =
-                    currentEndChimeUri?.lastPathSegment ?: getString(R.string.chime_none)
+                applyPreset(preset)
             }
             .show()
+    }
+
+    private fun applyPreset(preset: Preset) {
+        binding.durationInput.setText(preset.durationMinutes.toString())
+        binding.intervalInput.setText(preset.intervalMinutes.toString())
+
+        isEntrainmentMuted = preset.entrainmentMuted ?: false
+        isMusicMuted = preset.musicMuted ?: false
+        binding.entrainmentMuteCheckbox.isChecked = isEntrainmentMuted
+        binding.musicMuteCheckbox.isChecked = isMusicMuted
+        binding.entrainmentVolumeSlider.alpha = if (isEntrainmentMuted) 0.5f else 1.0f
+        binding.musicVolumeSlider.alpha = if (isMusicMuted) 0.5f else 1.0f
+
+        currentEntrainmentUri = preset.entrainmentUri?.let { Uri.parse(it) }
+        binding.entrainmentFilename.text =
+            currentEntrainmentUri?.lastPathSegment ?: getString(R.string.entrainment_none)
+        binding.entrainmentVolumeSlider.value = preset.entrainmentVolume ?: 1.0f
+        binding.entrainmentVolumeValue.text =
+            formatVolumePercent(binding.entrainmentVolumeSlider.value, isEntrainmentMuted)
+
+        currentMusicUri = preset.musicUri?.let { Uri.parse(it) }
+        binding.musicFilename.text = currentMusicUri?.lastPathSegment ?: getString(R.string.music_none)
+        binding.musicVolumeSlider.value = preset.musicVolume ?: 1.0f
+        binding.musicVolumeValue.text =
+            formatVolumePercent(binding.musicVolumeSlider.value, isMusicMuted)
+
+        currentStartChimeUri = preset.startChimeUri?.let { Uri.parse(it) }
+        currentIntervalChimeUri = preset.intervalChimeUri?.let { Uri.parse(it) }
+        currentEndChimeUri = preset.endChimeUri?.let { Uri.parse(it) }
+        binding.startChimeFilename.text =
+            currentStartChimeUri?.lastPathSegment ?: getString(R.string.chime_none)
+        binding.intervalChimeFilename.text =
+            currentIntervalChimeUri?.lastPathSegment ?: getString(R.string.chime_none)
+        binding.endChimeFilename.text =
+            currentEndChimeUri?.lastPathSegment ?: getString(R.string.chime_none)
     }
 
     private fun updateTimerDisplay(remainingSeconds: Long, totalSeconds: Long) {
