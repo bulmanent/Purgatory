@@ -2,24 +2,19 @@ package com.meditation.timer
 
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
-import android.media.AudioFormat
 import android.media.AudioManager
-import android.media.AudioTrack
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import kotlin.math.max
-import kotlin.math.PI
-import kotlin.math.sin
-import kotlin.math.pow
 
 class MetronomeManager(
     private val audioManager: AudioManager,
     private val onStopped: (() -> Unit)? = null
 ) {
     private val handler = Handler(Looper.getMainLooper())
-    private var clickTrack: AudioTrack? = null
-    private var accentTrack: AudioTrack? = null
+    private var toneGenerator: ToneGenerator? = null
     private var bpm = 90
     private var beatsPerBar = 4
     private var beatIndex = 0
@@ -44,13 +39,13 @@ class MetronomeManager(
 
     fun setVolume(volume: Float) {
         this.volume = volume.coerceIn(0f, 1f)
-        recreateClickTracksIfNeeded()
+        recreateToneGeneratorIfNeeded()
     }
 
     fun start() {
         if (running) return
         if (!requestFocus()) return
-        recreateClickTracksIfNeeded()
+        recreateToneGeneratorIfNeeded()
         running = true
         beatIndex = 0
         handler.removeCallbacks(tickRunnable)
@@ -69,93 +64,38 @@ class MetronomeManager(
 
     fun release() {
         stop()
-        clickTrack?.release()
-        accentTrack?.release()
-        clickTrack = null
-        accentTrack = null
+        toneGenerator?.release()
+        toneGenerator = null
     }
 
     fun onAudioFocusLost() {
         stop()
     }
 
-    private fun ensureClickTracks() {
-        if (clickTrack != null && accentTrack != null) return
-        val sampleRate = 44100
-        clickTrack = buildClickTrack(sampleRate, 1.0f)
-        accentTrack = buildClickTrack(sampleRate, 1.08f)
-        applyVolumeToTracks()
+    private fun ensureToneGenerator() {
+        if (toneGenerator != null) return
+        val scaledVolume = (volume * 100).toInt().coerceIn(0, 100)
+        toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, scaledVolume)
     }
 
-    private fun recreateClickTracksIfNeeded() {
-        clickTrack?.release()
-        accentTrack?.release()
-        clickTrack = null
-        accentTrack = null
+    private fun recreateToneGeneratorIfNeeded() {
+        toneGenerator?.release()
+        toneGenerator = null
         if (running) {
-            ensureClickTracks()
+            ensureToneGenerator()
         }
     }
 
     private fun playTick() {
-        ensureClickTracks()
+        ensureToneGenerator()
         val isAccent = beatIndex % max(1, beatsPerBar) == 0
-        val track = if (isAccent) accentTrack else clickTrack
-        playTrack(track)
+        val tone = if (isAccent) {
+            ToneGenerator.TONE_PROP_BEEP2
+        } else {
+            ToneGenerator.TONE_PROP_BEEP
+        }
+        toneGenerator?.startTone(tone, 80)
         beatIndex = (beatIndex + 1) % max(1, beatsPerBar)
-    }
-
-    private fun playTrack(track: AudioTrack?) {
-        if (track == null) return
-        if (track.playState == AudioTrack.PLAYSTATE_PLAYING) {
-            track.pause()
-            track.flush()
-        }
-        applyVolumeToTracks()
-        track.setPlaybackHeadPosition(0)
-        track.play()
-    }
-
-    private fun buildClickTrack(sampleRate: Int, amplitude: Float): AudioTrack {
-        val durationMs = 12
-        val numSamples = (sampleRate * durationMs) / 1000
-        val buffer = ShortArray(numSamples)
-        val decayRate = 12.0
-        val freq1 = 1200.0
-        val freq2 = 2400.0
-        for (i in 0 until numSamples) {
-            val t = i.toDouble() / numSamples
-            val envelope = (1.0 - t).pow(decayRate)
-            val sample =
-                0.65 * sin(2.0 * PI * freq1 * i / sampleRate) +
-                0.35 * sin(2.0 * PI * freq2 * i / sampleRate)
-            val value = (sample * envelope * amplitude * Short.MAX_VALUE).toInt()
-            buffer[i] = value.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
-        }
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-        val format = AudioFormat.Builder()
-            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-            .setSampleRate(sampleRate)
-            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-            .build()
-        val track = AudioTrack.Builder()
-            .setAudioAttributes(audioAttributes)
-            .setAudioFormat(format)
-            .setTransferMode(AudioTrack.MODE_STATIC)
-            .setBufferSizeInBytes(buffer.size * 2)
-            .build()
-        track.write(buffer, 0, buffer.size)
-        return track
-    }
-
-    private fun applyVolumeToTracks() {
-        val clickVol = (volume * 0.98f).coerceIn(0f, 1f)
-        val accentVol = (volume * 1.0f).coerceIn(0f, 1f)
-        clickTrack?.setVolume(clickVol)
-        accentTrack?.setVolume(accentVol)
     }
 
     private fun requestFocus(): Boolean {
@@ -169,7 +109,7 @@ class MetronomeManager(
             val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
                 .setAudioAttributes(
                     AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .build()
                 )
