@@ -1,4 +1,4 @@
-package com.meditation.timer
+package com.purgatory.tasks
 
 import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaType

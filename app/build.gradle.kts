@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.meditation.timer"
+    namespace = "com.purgatory.tasks"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.meditation.timer"
+        applicationId = "com.purgatory.tasks"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

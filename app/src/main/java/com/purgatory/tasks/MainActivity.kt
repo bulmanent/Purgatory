@@ -1,4 +1,4 @@
-package com.meditation.timer
+package com.purgatory.tasks
 
 import android.Manifest
 import android.content.Intent
@@ -19,8 +19,8 @@ import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.meditation.timer.databinding.ActivityMainBinding
-import com.meditation.timer.databinding.DialogEditTaskBinding
+import com.purgatory.tasks.databinding.ActivityMainBinding
+import com.purgatory.tasks.databinding.DialogEditTaskBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

@@ -1,4 +1,4 @@
-package com.meditation.timer
+package com.purgatory.tasks
 
 import android.content.Context
 import com.google.android.gms.auth.GoogleAuthUtil

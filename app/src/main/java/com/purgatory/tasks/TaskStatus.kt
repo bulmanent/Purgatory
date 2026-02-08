@@ -1,4 +1,4 @@
-package com.meditation.timer
+package com.purgatory.tasks
 
 enum class TaskStatus(val sheetValue: String) {
     UNASSIGNED("unassigned"),

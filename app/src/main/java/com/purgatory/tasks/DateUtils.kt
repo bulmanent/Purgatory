@@ -1,4 +1,4 @@
-package com.meditation.timer
+package com.purgatory.tasks
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

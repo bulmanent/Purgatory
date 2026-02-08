@@ -1,4 +1,4 @@
-package com.meditation.timer
+package com.purgatory.tasks
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
