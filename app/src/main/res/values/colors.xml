@@ -6,4 +6,15 @@
     <color name="lavender_700">#7B1FA2</color>
     <color name="lavender_900">#4A148C</color>
     <color name="pale_green_50">#E7F8E9</color>
+    <color name="ink_900">#1A1A1A</color>
+    <color name="ink_600">#4F4F4F</color>
+    <color name="surface">#F6F2EC</color>
+    <color name="surface_alt">#FFFDF9</color>
+    <color name="accent_amber">#F2A900</color>
+    <color name="accent_blue">#2A66E3</color>
+    <color name="owner_neil">#1E8E6E</color>
+    <color name="owner_jean">#C7412D</color>
+    <color name="status_crucial">#C62828</color>
+    <color name="status_due">#F57C00</color>
+    <color name="status_complete">#2E7D32</color>
 </resources>

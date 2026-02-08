@@ -1,33 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/pale_green_50"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="@color/surface">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/settingsToolbar"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/lavender_500"
-        android:title="@string/settings"
-        android:titleTextColor="@android:color/white" />
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/keepScreenAwakeSwitch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/keep_screen_awake" />
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/settingsToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/ink_900"
+            android:title="@string/settings"
+            android:titleTextColor="@color/surface_alt" />
 
-    <TextView
-        android:id="@+id/keepScreenAwakeHint"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/keep_screen_awake_hint"
-        android:textColor="@color/lavender_900" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:hint="@string/settings_spreadsheet_id">
 
-</LinearLayout>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/spreadsheetIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="@string/settings_default_user"
+            app:endIconMode="dropdown_menu">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/defaultUserInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/dailyReminderSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/settings_daily_reminder" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/settings_daily_reminder_hint"
+            android:textColor="@color/ink_600" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/signOutButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/settings_sign_out" />
+    </LinearLayout>
+</ScrollView>

@@ -3,32 +3,30 @@ package com.meditation.timer
 import android.content.Context
 
 object AppSettings {
-    private const val PREFS_NAME = "meditation_timer_settings"
-    const val KEY_KEEP_SCREEN_AWAKE = "keep_screen_awake"
-    const val KEY_METRONOME_TONE_INDEX = "metronome_tone_index"
+    private const val PREFS_NAME = "purgatory_settings"
+    const val KEY_DEFAULT_USER = "default_user"
+    const val KEY_SPREADSHEET_ID = "spreadsheet_id"
+    const val KEY_DAILY_REMINDER = "daily_reminder"
 
-    fun isKeepScreenAwakeEnabled(context: Context): Boolean {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(KEY_KEEP_SCREEN_AWAKE, false)
+    fun getDefaultUser(context: Context): String? =
+        prefs(context).getString(KEY_DEFAULT_USER, AppUsers.all.firstOrNull()?.displayName)
+
+    fun setDefaultUser(context: Context, user: String) {
+        prefs(context).edit().putString(KEY_DEFAULT_USER, user).apply()
     }
 
-    fun setKeepScreenAwakeEnabled(context: Context, enabled: Boolean) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(KEY_KEEP_SCREEN_AWAKE, enabled)
-            .apply()
+    fun getSpreadsheetId(context: Context): String? =
+        prefs(context).getString(KEY_SPREADSHEET_ID, null)
+
+    fun setSpreadsheetId(context: Context, id: String) {
+        prefs(context).edit().putString(KEY_SPREADSHEET_ID, id).apply()
     }
 
-    fun getMetronomeToneIndex(context: Context): Int {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getInt(KEY_METRONOME_TONE_INDEX, 0)
-    }
+    fun isDailyReminderEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_DAILY_REMINDER, false)
 
-    fun setMetronomeToneIndex(context: Context, index: Int) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putInt(KEY_METRONOME_TONE_INDEX, index)
-            .apply()
+    fun setDailyReminderEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_DAILY_REMINDER, enabled).apply()
     }
 
     fun prefs(context: Context) =

@@ -6,4 +6,9 @@
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="@string/settings"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_sync"
+        android:icon="@android:drawable/ic_popup_sync"
+        android:title="@string/sync_now"
+        app:showAsAction="ifRoom" />
 </menu>
