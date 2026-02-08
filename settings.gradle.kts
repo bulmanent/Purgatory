@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MeditationTimer"
+rootProject.name = "Purgatory"
 include(":app")
