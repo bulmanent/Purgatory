@@ -26,6 +26,8 @@ object AuthManager {
     @Throws(UserRecoverableAuthException::class)
     fun getAccessToken(context: Context, account: GoogleSignInAccount): String {
         val scope = "oauth2:$SHEETS_SCOPE"
-        return GoogleAuthUtil.getToken(context, account.account, scope)
+        val androidAccount = account.account
+            ?: throw IllegalStateException("Google account is missing.")
+        return GoogleAuthUtil.getToken(context, androidAccount, scope)
     }
 }
