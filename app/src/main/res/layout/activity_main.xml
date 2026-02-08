@@ -45,6 +45,13 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/tasks_completed" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/viewAllButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/tasks_all" />
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <LinearLayout

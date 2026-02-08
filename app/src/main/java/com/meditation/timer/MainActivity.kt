@@ -16,6 +16,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.meditation.timer.databinding.ActivityMainBinding
 import com.meditation.timer.databinding.DialogEditTaskBinding
@@ -36,12 +38,19 @@ class MainActivity : AppCompatActivity() {
     private var allTasks: List<Task> = emptyList()
     private var ownerFilter: String? = null
     private var statusFilter: TaskStatus? = null
-    private var showCompleted: Boolean = false
+    private var viewMode: ViewMode = ViewMode.CURRENT
 
     private val signInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        refreshTasks()
+        val signInTask = GoogleSignIn.getSignedInAccountFromIntent(it.data)
+        try {
+            signInTask.getResult(ApiException::class.java)
+            refreshTasks()
+        } catch (ex: ApiException) {
+            Toast.makeText(this, ex.message ?: "Sign-in failed.", Toast.LENGTH_LONG).show()
+            showSignInState(showSignIn = true, showSpreadsheetHint = false)
+        }
     }
 
     private val recoverAuthLauncher = registerForActivityResult(
@@ -66,7 +75,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.viewToggleGroup.check(R.id.viewCurrentButton)
         binding.viewToggleGroup.addOnButtonCheckedListener { _, checkedId, _ ->
-            showCompleted = checkedId == R.id.viewCompletedButton
+            viewMode = when (checkedId) {
+                R.id.viewCompletedButton -> ViewMode.COMPLETED
+                R.id.viewAllButton -> ViewMode.ALL
+                else -> ViewMode.CURRENT
+            }
             applyFilters()
         }
 
@@ -211,9 +224,10 @@ class MainActivity : AppCompatActivity() {
     private fun applyFilters() {
         val filtered = allTasks
             .filter { task ->
-                when {
-                    showCompleted -> task.status == TaskStatus.COMPLETE
-                    else -> isCurrentTask(task)
+                when (viewMode) {
+                    ViewMode.COMPLETED -> task.status == TaskStatus.COMPLETE
+                    ViewMode.ALL -> true
+                    ViewMode.CURRENT -> isCurrentTask(task)
                 }
             }
             .filter { task ->
@@ -386,11 +400,6 @@ class MainActivity : AppCompatActivity() {
             DateUtils.parse(dialogBinding.taskDateInput.text?.toString())
         }
 
-        if (status != TaskStatus.UNASSIGNED && date == null) {
-            Toast.makeText(this, "Enter a valid date (dd/MM/yyyy).", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val spreadsheetId = AppSettings.getSpreadsheetId(this)
         val account = AuthManager.getSignedInAccount(this)
         if (spreadsheetId.isNullOrBlank() || account == null) {
@@ -427,5 +436,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, ex.message ?: "Unable to save task.", Toast.LENGTH_LONG).show()
             }
         }
+    }
+
+    private enum class ViewMode {
+        CURRENT,
+        COMPLETED,
+        ALL
     }
 }
