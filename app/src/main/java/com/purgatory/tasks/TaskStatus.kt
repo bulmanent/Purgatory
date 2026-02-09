@@ -8,7 +8,9 @@ enum class TaskStatus(val sheetValue: String) {
 
     companion object {
         fun fromSheet(value: String?): TaskStatus {
-            return values().firstOrNull { it.sheetValue.equals(value?.trim(), ignoreCase = true) }
+            val cleaned = value?.trim().orEmpty()
+            if (cleaned.isBlank()) return UNASSIGNED
+            return values().firstOrNull { it.sheetValue.equals(cleaned, ignoreCase = true) }
                 ?: DUE
         }
     }

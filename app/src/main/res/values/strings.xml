@@ -38,6 +38,7 @@
     <string name="settings_daily_reminder">Daily reminder</string>
     <string name="settings_daily_reminder_hint">Sends a daily reminder to check the task list.</string>
     <string name="settings_sign_out">Sign out of Google</string>
+    <string name="settings_refresh">Refresh tasks</string>
     <string name="loading_tasks">Loading tasks…</string>
     <string name="empty_tasks">No tasks match these filters.</string>
     <string name="retry">Retry</string>

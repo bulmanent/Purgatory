@@ -79,6 +79,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         setupFilters()
+        if (intent.getBooleanExtra(EXTRA_FORCE_REFRESH, false)) {
+            intent.removeExtra(EXTRA_FORCE_REFRESH)
+        }
         refreshTasks()
     }
 
@@ -135,6 +138,10 @@ class MainActivity : AppCompatActivity() {
                 3 -> TaskStatus.CRUCIAL
                 4 -> TaskStatus.COMPLETE
                 else -> null
+            }
+            if (statusFilter == TaskStatus.UNASSIGNED) {
+                ownerFilter = null
+                binding.ownerFilterInput.setText(getString(R.string.filter_all), false)
             }
             applyFilters()
         }
@@ -401,5 +408,9 @@ class MainActivity : AppCompatActivity() {
         CURRENT,
         COMPLETED,
         ALL
+    }
+
+    companion object {
+        const val EXTRA_FORCE_REFRESH = "force_refresh"
     }
 }

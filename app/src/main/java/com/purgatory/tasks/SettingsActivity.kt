@@ -1,5 +1,6 @@
 package com.purgatory.tasks
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
@@ -40,6 +41,13 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.signOutButton.isEnabled = false
+
+        binding.refreshTasksButton.setOnClickListener {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra(MainActivity.EXTRA_FORCE_REFRESH, true)
+            }
+            startActivity(intent)
+        }
     }
 
     override fun onPause() {
