@@ -18,9 +18,11 @@ object AppSettings {
 
     fun getSpreadsheetId(context: Context): String? =
         prefs(context).getString(KEY_SPREADSHEET_ID, DEFAULT_SPREADSHEET_ID)
+            ?.trim()
+            ?.ifBlank { DEFAULT_SPREADSHEET_ID }
 
     fun setSpreadsheetId(context: Context, id: String) {
-        prefs(context).edit().putString(KEY_SPREADSHEET_ID, id).apply()
+        prefs(context).edit().putString(KEY_SPREADSHEET_ID, normalizeSpreadsheetId(id)).apply()
     }
 
     fun isDailyReminderEnabled(context: Context): Boolean =
@@ -32,4 +34,14 @@ object AppSettings {
 
     fun prefs(context: Context) =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    private fun normalizeSpreadsheetId(input: String): String {
+        val trimmed = input.trim()
+        if (trimmed.contains("/d/")) {
+            val start = trimmed.indexOf("/d/") + 3
+            val end = trimmed.indexOf("/edit", start).let { if (it == -1) trimmed.length else it }
+            return trimmed.substring(start, end)
+        }
+        return trimmed
+    }
 }

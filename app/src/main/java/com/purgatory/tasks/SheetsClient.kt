@@ -27,7 +27,8 @@ class SheetsClient(
             .build()
         httpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                throw IllegalStateException("Sheets fetch failed: ${response.code}")
+                val details = response.body?.string().orEmpty()
+                throw IllegalStateException("Sheets fetch failed: ${response.code} $details")
             }
             val body = response.body?.string().orEmpty()
             val parsed = gson.fromJson(body, ValuesResponse::class.java)
@@ -50,7 +51,8 @@ class SheetsClient(
             .build()
         httpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                throw IllegalStateException("Sheets append failed: ${response.code}")
+                val details = response.body?.string().orEmpty()
+                throw IllegalStateException("Sheets append failed: ${response.code} $details")
             }
         }
     }
@@ -71,7 +73,8 @@ class SheetsClient(
             .build()
         httpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                throw IllegalStateException("Sheets update failed: ${response.code}")
+                val details = response.body?.string().orEmpty()
+                throw IllegalStateException("Sheets update failed: ${response.code} $details")
             }
         }
     }
