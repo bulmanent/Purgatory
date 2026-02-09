@@ -315,11 +315,11 @@ class MainActivity : AppCompatActivity() {
             dialogBinding.taskStatusInput.setText(task.status.sheetValue, false)
             dialogBinding.taskDateInput.setText(DateUtils.format(task.dueDate))
         } else {
-            dialogBinding.taskImportanceInput.setText("0")
+            dialogBinding.taskImportanceInput.setText("1")
             val defaultOwner = AppSettings.getDefaultUser(this)
             dialogBinding.taskOwnerInput.setText(defaultOwner ?: owners.firstOrNull(), false)
             dialogBinding.taskStatusInput.setText(getString(R.string.task_status_due), false)
-            dialogBinding.taskDateInput.setText(DateUtils.format(LocalDate.now()))
+            dialogBinding.taskDateInput.setText(DateUtils.format(LocalDate.now().plusDays(1)))
         }
 
         fun updateDateField(status: TaskStatus) {
@@ -359,14 +359,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        MaterialAlertDialogBuilder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(if (task == null) R.string.add_task else R.string.edit_task)
             .setView(dialogBinding.root)
-            .setPositiveButton(R.string.task_save) { _, _ ->
-                saveTaskFromDialog(task, dialogBinding)
+            .create()
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.show()
+
+        dialogBinding.taskCancelButton.setOnClickListener { dialog.dismiss() }
+        dialogBinding.taskSaveButton.setOnClickListener {
+            val didStartSave = saveTaskFromDialog(task, dialogBinding)
+            if (didStartSave) {
+                dialog.dismiss()
             }
-            .setNegativeButton(R.string.task_cancel, null)
-            .show()
+        }
     }
 
     private fun showDatePicker(dialogBinding: DialogEditTaskBinding) {
@@ -389,11 +395,11 @@ class MainActivity : AppCompatActivity() {
         picker.show()
     }
 
-    private fun saveTaskFromDialog(task: Task?, dialogBinding: DialogEditTaskBinding) {
+    private fun saveTaskFromDialog(task: Task?, dialogBinding: DialogEditTaskBinding): Boolean {
         val details = dialogBinding.taskDetailsInput.text?.toString()?.trim().orEmpty()
         if (details.isBlank()) {
             Toast.makeText(this, "Details are required.", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
         val importance = dialogBinding.taskImportanceInput.text?.toString()?.toIntOrNull() ?: 0
         val owner = AppUsers.byDisplayName(dialogBinding.taskOwnerInput.text?.toString())
@@ -407,7 +413,7 @@ class MainActivity : AppCompatActivity() {
         val spreadsheetId = AppSettings.getSpreadsheetId(this)
         if (spreadsheetId.isNullOrBlank()) {
             Toast.makeText(this, "Set Spreadsheet ID first.", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
 
         lifecycleScope.launch {
@@ -437,6 +443,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, ex.message ?: "Unable to save task.", Toast.LENGTH_LONG).show()
             }
         }
+
+        return true
     }
 
     private enum class ViewMode {
