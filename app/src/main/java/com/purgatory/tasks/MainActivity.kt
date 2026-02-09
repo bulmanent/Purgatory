@@ -207,6 +207,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun applyFilters() {
+        val bothOwnerName = AppUsers.byId("both")?.displayName ?: "Both"
         val filtered = allTasks
             .filter { task ->
                 when (viewMode) {
@@ -219,7 +220,11 @@ class MainActivity : AppCompatActivity() {
                 when {
                     ownerFilterUnassigned -> task.owner == null
                     ownerFilter == null -> true
-                    else -> task.owner?.displayName.equals(ownerFilter, ignoreCase = true)
+                    ownerFilter.equals(bothOwnerName, ignoreCase = true) ->
+                        task.owner?.displayName.equals(bothOwnerName, ignoreCase = true)
+                    else ->
+                        task.owner?.displayName.equals(ownerFilter, ignoreCase = true) ||
+                            task.owner?.displayName.equals(bothOwnerName, ignoreCase = true)
                 }
             }
             .filter { task ->
