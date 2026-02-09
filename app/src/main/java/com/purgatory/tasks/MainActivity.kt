@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
 
     private var allTasks: List<Task> = emptyList()
     private var ownerFilter: String? = null
+    private var ownerFilterUnassigned: Boolean = false
     private var statusFilter: TaskStatus? = null
     private var viewMode: ViewMode = ViewMode.CURRENT
 
@@ -105,17 +106,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupFilters() {
-        val ownerOptions = mutableListOf(getString(R.string.filter_all))
+        val ownerOptions = mutableListOf(
+            getString(R.string.filter_all),
+            getString(R.string.task_unassigned)
+        )
         ownerOptions.addAll(AppUsers.all.map { it.displayName })
         binding.ownerFilterInput.setAdapter(
             ArrayAdapter(this, android.R.layout.simple_list_item_1, ownerOptions)
         )
 
         val defaultOwner = AppSettings.getDefaultUser(this)
-        binding.ownerFilterInput.setText(defaultOwner ?: getString(R.string.filter_all), false)
+        val defaultOwnerLabel = defaultOwner ?: getString(R.string.filter_all)
+        binding.ownerFilterInput.setText(defaultOwnerLabel, false)
+        ownerFilterUnassigned = false
         ownerFilter = if (defaultOwner.isNullOrBlank()) null else defaultOwner
         binding.ownerFilterInput.setOnItemClickListener { _, _, position, _ ->
-            ownerFilter = if (position == 0) null else ownerOptions[position]
+            ownerFilterUnassigned = position == 1
+            ownerFilter = when (position) {
+                0 -> null
+                1 -> null
+                else -> ownerOptions[position]
+            }
             applyFilters()
         }
 
@@ -142,6 +153,7 @@ class MainActivity : AppCompatActivity() {
             if (statusFilter == TaskStatus.UNASSIGNED) {
                 ownerFilter = null
                 binding.ownerFilterInput.setText(getString(R.string.filter_all), false)
+                ownerFilterUnassigned = false
             }
             applyFilters()
         }
@@ -204,7 +216,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .filter { task ->
-                ownerFilter == null || task.owner?.displayName.equals(ownerFilter, ignoreCase = true)
+                when {
+                    ownerFilterUnassigned -> task.owner == null
+                    ownerFilter == null -> true
+                    else -> task.owner?.displayName.equals(ownerFilter, ignoreCase = true)
+                }
             }
             .filter { task ->
                 statusFilter == null || task.status == statusFilter
@@ -239,21 +255,34 @@ class MainActivity : AppCompatActivity() {
 
     private fun toggleComplete(task: Task) {
         val spreadsheetId = AppSettings.getSpreadsheetId(this) ?: return
-        val updated = task.copy(
-            status = if (task.status == TaskStatus.COMPLETE) TaskStatus.DUE else TaskStatus.COMPLETE
-        )
-        lifecycleScope.launch {
-            try {
-                val token = withContext(Dispatchers.IO) {
-                    ServiceAccountAuth.getAccessToken(this@MainActivity)
+        fun performToggle() {
+            val updated = task.copy(
+                status = if (task.status == TaskStatus.COMPLETE) TaskStatus.DUE else TaskStatus.COMPLETE
+            )
+            lifecycleScope.launch {
+                try {
+                    val token = withContext(Dispatchers.IO) {
+                        ServiceAccountAuth.getAccessToken(this@MainActivity)
+                    }
+                    withContext(Dispatchers.IO) {
+                        repository.updateTask(token, spreadsheetId, updated)
+                    }
+                    refreshTasks()
+                } catch (ex: Exception) {
+                    Toast.makeText(this@MainActivity, ex.message ?: "Unable to update task.", Toast.LENGTH_LONG).show()
                 }
-                withContext(Dispatchers.IO) {
-                    repository.updateTask(token, spreadsheetId, updated)
-                }
-                refreshTasks()
-            } catch (ex: Exception) {
-                Toast.makeText(this@MainActivity, ex.message ?: "Unable to update task.", Toast.LENGTH_LONG).show()
             }
+        }
+
+        if (task.status != TaskStatus.COMPLETE) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.confirm_complete_title)
+                .setMessage(R.string.confirm_complete_body)
+                .setPositiveButton(R.string.task_mark_complete) { _, _ -> performToggle() }
+                .setNegativeButton(R.string.task_cancel, null)
+                .show()
+        } else {
+            performToggle()
         }
     }
 

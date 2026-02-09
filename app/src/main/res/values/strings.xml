@@ -21,6 +21,8 @@
     <string name="task_cancel">Cancel</string>
     <string name="task_mark_complete">Complete</string>
     <string name="task_restore">Restore</string>
+    <string name="confirm_complete_title">Mark complete?</string>
+    <string name="confirm_complete_body">This will mark the task as complete.</string>
     <string name="task_due_label">Due</string>
     <string name="task_unassigned">Unassigned</string>
     <string name="task_crucial">Crucial</string>

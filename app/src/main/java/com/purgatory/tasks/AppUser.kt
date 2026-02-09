@@ -11,7 +11,8 @@ data class AppUser(
 object AppUsers {
     val all = listOf(
         AppUser("neil", "Neil", R.color.owner_neil),
-        AppUser("jean", "Jean", R.color.owner_jean)
+        AppUser("jean", "Jean", R.color.owner_jean),
+        AppUser("both", "Both", R.color.owner_both)
     )
 
     fun byDisplayName(name: String?): AppUser? =
