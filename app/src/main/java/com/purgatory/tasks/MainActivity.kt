@@ -230,6 +230,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun isCurrentTask(task: Task): Boolean {
         if (task.status == TaskStatus.CRUCIAL) return true
+        if (task.status == TaskStatus.UNASSIGNED) return true
         if (task.status == TaskStatus.COMPLETE) return false
         val date = task.dueDate ?: return false
         val today = LocalDate.now()
