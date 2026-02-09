@@ -135,41 +135,6 @@
                     android:text="@string/retry" />
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/signInContainer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="32dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/signInMessage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/sign_in_required"
-                    android:textColor="@color/ink_600"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/spreadsheetMessage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/spreadsheet_missing"
-                    android:textColor="@color/ink_600"
-                    android:textSize="14sp"
-                    android:visibility="gone" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/signInButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/sign_in_google" />
-            </LinearLayout>
-
             <ProgressBar
                 android:id="@+id/loadingIndicator"
                 style="?android:attr/progressBarStyleLarge"

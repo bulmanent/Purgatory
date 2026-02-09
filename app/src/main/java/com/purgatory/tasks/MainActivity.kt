@@ -15,9 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.gms.auth.UserRecoverableAuthException
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.purgatory.tasks.databinding.ActivityMainBinding
 import com.purgatory.tasks.databinding.DialogEditTaskBinding
@@ -39,25 +36,6 @@ class MainActivity : AppCompatActivity() {
     private var ownerFilter: String? = null
     private var statusFilter: TaskStatus? = null
     private var viewMode: ViewMode = ViewMode.CURRENT
-
-    private val signInLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        val signInTask = GoogleSignIn.getSignedInAccountFromIntent(it.data)
-        try {
-            signInTask.getResult(ApiException::class.java)
-            refreshTasks()
-        } catch (ex: ApiException) {
-            Toast.makeText(this, ex.message ?: "Sign-in failed.", Toast.LENGTH_LONG).show()
-            showSignInState(showSignIn = true, showSpreadsheetHint = false)
-        }
-    }
-
-    private val recoverAuthLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        refreshTasks()
-    }
 
     private val requestNotifications = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -87,7 +65,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.addTaskFab.setOnClickListener { showTaskDialog(null) }
         binding.retryButton.setOnClickListener { refreshTasks() }
-        binding.signInButton.setOnClickListener { startSignIn() }
         binding.taskRefresh.setOnRefreshListener { refreshTasks() }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -165,15 +142,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshTasks() {
         val spreadsheetId = AppSettings.getSpreadsheetId(this)
-        val account = AuthManager.getSignedInAccount(this)
-
         if (spreadsheetId.isNullOrBlank()) {
-            showSignInState(showSignIn = true, showSpreadsheetHint = true)
-            binding.taskRefresh.isRefreshing = false
-            return
-        }
-        if (account == null) {
-            showSignInState(showSignIn = true, showSpreadsheetHint = false)
+            showBlockingMessage(getString(R.string.spreadsheet_missing))
             binding.taskRefresh.isRefreshing = false
             return
         }
@@ -183,18 +153,16 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val token = withContext(Dispatchers.IO) {
-                    AuthManager.getAccessToken(this@MainActivity, account)
+                    ServiceAccountAuth.getAccessToken(this@MainActivity)
                 }
                 val tasks = withContext(Dispatchers.IO) {
                     repository.loadTasks(token, spreadsheetId)
                 }
                 allTasks = tasks
-                showSignInState(showSignIn = false, showSpreadsheetHint = false)
+                showBlockingMessage(null)
                 applyFilters()
-            } catch (recoverable: UserRecoverableAuthException) {
-                recoverAuthLauncher.launch(recoverable.intent)
             } catch (ex: Exception) {
-                showSignInState(showSignIn = true, showSpreadsheetHint = false)
+                showBlockingMessage(ex.message ?: "Unable to load tasks.")
                 Toast.makeText(this@MainActivity, ex.message ?: "Unable to load tasks.", Toast.LENGTH_LONG).show()
             } finally {
                 showLoading(false)
@@ -203,22 +171,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startSignIn() {
-        val intent = AuthManager.getSignInClient(this).signInIntent
-        signInLauncher.launch(intent)
-    }
-
     private fun showLoading(isLoading: Boolean) {
         binding.loadingIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
-    private fun showSignInState(showSignIn: Boolean, showSpreadsheetHint: Boolean) {
-        binding.signInContainer.visibility = if (showSignIn) View.VISIBLE else View.GONE
-        binding.spreadsheetMessage.visibility = if (showSpreadsheetHint) View.VISIBLE else View.GONE
-        binding.filterContainer.visibility = if (showSignIn) View.GONE else View.VISIBLE
-        binding.taskRefresh.visibility = if (showSignIn) View.GONE else View.VISIBLE
-        binding.emptyState.visibility = View.GONE
-        binding.addTaskFab.visibility = if (showSignIn) View.GONE else View.VISIBLE
+    private fun showBlockingMessage(message: String?) {
+        val show = !message.isNullOrBlank()
+        if (show) {
+            binding.emptyStateText.text = message
+        }
+        binding.emptyState.visibility = if (show) View.VISIBLE else View.GONE
+        binding.retryButton.visibility = if (show) View.GONE else View.VISIBLE
+        binding.filterContainer.visibility = if (show) View.GONE else View.VISIBLE
+        binding.taskRefresh.visibility = if (show) View.GONE else View.VISIBLE
+        binding.addTaskFab.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     private fun applyFilters() {
@@ -243,7 +209,6 @@ class MainActivity : AppCompatActivity() {
         taskAdapter.submitList(filtered)
         binding.emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
         binding.taskRefresh.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
-        binding.signInContainer.visibility = View.GONE
         binding.addTaskFab.visibility = View.VISIBLE
     }
 
@@ -266,21 +231,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun toggleComplete(task: Task) {
         val spreadsheetId = AppSettings.getSpreadsheetId(this) ?: return
-        val account = AuthManager.getSignedInAccount(this) ?: return
         val updated = task.copy(
             status = if (task.status == TaskStatus.COMPLETE) TaskStatus.DUE else TaskStatus.COMPLETE
         )
         lifecycleScope.launch {
             try {
                 val token = withContext(Dispatchers.IO) {
-                    AuthManager.getAccessToken(this@MainActivity, account)
+                    ServiceAccountAuth.getAccessToken(this@MainActivity)
                 }
                 withContext(Dispatchers.IO) {
                     repository.updateTask(token, spreadsheetId, updated)
                 }
                 refreshTasks()
-            } catch (recoverable: UserRecoverableAuthException) {
-                recoverAuthLauncher.launch(recoverable.intent)
             } catch (ex: Exception) {
                 Toast.makeText(this@MainActivity, ex.message ?: "Unable to update task.", Toast.LENGTH_LONG).show()
             }
@@ -401,16 +363,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         val spreadsheetId = AppSettings.getSpreadsheetId(this)
-        val account = AuthManager.getSignedInAccount(this)
-        if (spreadsheetId.isNullOrBlank() || account == null) {
-            Toast.makeText(this, "Sign in and set Spreadsheet ID first.", Toast.LENGTH_SHORT).show()
+        if (spreadsheetId.isNullOrBlank()) {
+            Toast.makeText(this, "Set Spreadsheet ID first.", Toast.LENGTH_SHORT).show()
             return
         }
 
         lifecycleScope.launch {
             try {
                 val token = withContext(Dispatchers.IO) {
-                    AuthManager.getAccessToken(this@MainActivity, account)
+                    ServiceAccountAuth.getAccessToken(this@MainActivity)
                 }
                 withContext(Dispatchers.IO) {
                     if (task == null) {
@@ -430,8 +391,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 refreshTasks()
-            } catch (recoverable: UserRecoverableAuthException) {
-                recoverAuthLauncher.launch(recoverable.intent)
             } catch (ex: Exception) {
                 Toast.makeText(this@MainActivity, ex.message ?: "Unable to save task.", Toast.LENGTH_LONG).show()
             }

@@ -1,28 +1,12 @@
 package com.purgatory.tasks
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.purgatory.tasks.databinding.ActivitySettingsBinding
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
-
-    private val requestNotifications = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (!granted) {
-            binding.dailyReminderSwitch.isChecked = false
-            AppSettings.setDailyReminderEnabled(this, false)
-            ReminderScheduler.cancel(this)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,18 +33,13 @@ class SettingsActivity : AppCompatActivity() {
         binding.dailyReminderSwitch.setOnCheckedChangeListener { _, isChecked ->
             AppSettings.setDailyReminderEnabled(this, isChecked)
             if (isChecked) {
-                ensureNotificationPermission()
                 ReminderScheduler.schedule(this)
             } else {
                 ReminderScheduler.cancel(this)
             }
         }
 
-        binding.signOutButton.setOnClickListener {
-            AuthManager.getSignInClient(this).signOut().addOnCompleteListener {
-                Toast.makeText(this, "Signed out.", Toast.LENGTH_SHORT).show()
-            }
-        }
+        binding.signOutButton.isEnabled = false
     }
 
     override fun onPause() {
@@ -74,13 +53,4 @@ class SettingsActivity : AppCompatActivity() {
         return true
     }
 
-    private fun ensureNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
 }

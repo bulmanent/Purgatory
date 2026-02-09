@@ -7,6 +7,7 @@ object AppSettings {
     const val KEY_DEFAULT_USER = "default_user"
     const val KEY_SPREADSHEET_ID = "spreadsheet_id"
     const val KEY_DAILY_REMINDER = "daily_reminder"
+    private const val DEFAULT_SPREADSHEET_ID = "1MOrfuWJKrc9QSgryFWTegCz587xXF6JGzGUCqWMeQEk"
 
     fun getDefaultUser(context: Context): String? =
         prefs(context).getString(KEY_DEFAULT_USER, AppUsers.all.firstOrNull()?.displayName)
@@ -16,7 +17,7 @@ object AppSettings {
     }
 
     fun getSpreadsheetId(context: Context): String? =
-        prefs(context).getString(KEY_SPREADSHEET_ID, null)
+        prefs(context).getString(KEY_SPREADSHEET_ID, DEFAULT_SPREADSHEET_ID)
 
     fun setSpreadsheetId(context: Context, id: String) {
         prefs(context).edit().putString(KEY_SPREADSHEET_ID, id).apply()
