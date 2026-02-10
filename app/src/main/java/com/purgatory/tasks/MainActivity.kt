@@ -141,8 +141,8 @@ class MainActivity : AppCompatActivity() {
         binding.statusFilterInput.setAdapter(
             ArrayAdapter(this, android.R.layout.simple_list_item_1, statusOptions)
         )
-        binding.statusFilterInput.setText(getString(R.string.filter_all), false)
-        statusFilter = null
+        binding.statusFilterInput.setText(getString(R.string.task_status_due), false)
+        statusFilter = TaskStatus.DUE
         binding.statusFilterInput.setOnItemClickListener { _, _, position, _ ->
             statusFilter = when (position) {
                 1 -> TaskStatus.UNASSIGNED
