@@ -20,7 +20,7 @@ class SheetsClient(
 
     suspend fun fetchTasks(accessToken: String, spreadsheetId: String): List<List<String>> {
         val url =
-            "https://sheets.googleapis.com/v4/spreadsheets/$spreadsheetId/values/Purgatory!A2:E?majorDimension=ROWS"
+            "https://sheets.googleapis.com/v4/spreadsheets/$spreadsheetId/values/Purgatory!A2:G?majorDimension=ROWS"
         val request = Request.Builder()
             .url(url)
             .addHeader("Authorization", "Bearer $accessToken")
@@ -42,7 +42,7 @@ class SheetsClient(
         values: List<String>
     ) {
         val url =
-            "https://sheets.googleapis.com/v4/spreadsheets/$spreadsheetId/values/Purgatory!A:E:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS"
+            "https://sheets.googleapis.com/v4/spreadsheets/$spreadsheetId/values/Purgatory!A:G:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS"
         val payload = gson.toJson(mapOf("values" to listOf(values)))
         val request = Request.Builder()
             .url(url)
@@ -64,7 +64,7 @@ class SheetsClient(
         values: List<String>
     ) {
         val url =
-            "https://sheets.googleapis.com/v4/spreadsheets/$spreadsheetId/values/Purgatory!A$rowIndex:E$rowIndex?valueInputOption=USER_ENTERED"
+            "https://sheets.googleapis.com/v4/spreadsheets/$spreadsheetId/values/Purgatory!A$rowIndex:G$rowIndex?valueInputOption=USER_ENTERED"
         val payload = gson.toJson(mapOf("values" to listOf(values)))
         val request = Request.Builder()
             .url(url)
