@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.LocalTime
 import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
@@ -179,6 +180,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 allTasks = tasks
                 showBlockingMessage(null)
+                TaskReminderScheduler.sync(this@MainActivity, tasks)
                 applyFilters()
             } catch (ex: Exception) {
                 showBlockingMessage(ex.message ?: "Unable to load tasks.")
@@ -231,8 +233,8 @@ class MainActivity : AppCompatActivity() {
                 statusFilter == null || task.status == statusFilter
             }
             .sortedWith(compareBy<Task> { statusSortKey(it.status) }
-                .thenBy { it.dueDate ?: LocalDate.MAX }
-                .thenByDescending { it.importance })
+                .thenByDescending { it.importance }
+                .thenBy { it.dueDate ?: LocalDate.MAX })
 
         taskAdapter.submitList(filtered)
         binding.emptyState.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
@@ -314,12 +316,16 @@ class MainActivity : AppCompatActivity() {
             dialogBinding.taskOwnerInput.setText(task.owner?.displayName ?: owners.firstOrNull(), false)
             dialogBinding.taskStatusInput.setText(task.status.sheetValue, false)
             dialogBinding.taskDateInput.setText(DateUtils.format(task.dueDate))
+            dialogBinding.taskNotifySwitch.isChecked = task.notifyEnabled
+            dialogBinding.taskNotifyTimeInput.setText(DateUtils.formatTime(task.notifyTime))
         } else {
             dialogBinding.taskImportanceInput.setText("1")
             val defaultOwner = AppSettings.getDefaultUser(this)
             dialogBinding.taskOwnerInput.setText(defaultOwner ?: owners.firstOrNull(), false)
             dialogBinding.taskStatusInput.setText(getString(R.string.task_status_due), false)
             dialogBinding.taskDateInput.setText(DateUtils.format(LocalDate.now().plusDays(1)))
+            dialogBinding.taskNotifySwitch.isChecked = false
+            dialogBinding.taskNotifyTimeInput.setText(DateUtils.formatTime(LocalTime.of(9, 0)))
         }
 
         fun updateDateField(status: TaskStatus) {
@@ -337,6 +343,13 @@ class MainActivity : AppCompatActivity() {
         val initialStatus = TaskStatus.fromSheet(dialogBinding.taskStatusInput.text?.toString())
         updateDateField(initialStatus)
 
+        fun updateNotifyField(enabled: Boolean) {
+            dialogBinding.taskNotifyTimeLayout.isEnabled = enabled
+            dialogBinding.taskNotifyTimeInput.isEnabled = enabled
+        }
+
+        updateNotifyField(dialogBinding.taskNotifySwitch.isChecked)
+
         dialogBinding.taskStatusInput.setOnItemClickListener { _, _, position, _ ->
             val status = when (position) {
                 0 -> TaskStatus.UNASSIGNED
@@ -346,6 +359,24 @@ class MainActivity : AppCompatActivity() {
                 else -> TaskStatus.DUE
             }
             updateDateField(status)
+        }
+
+        dialogBinding.taskNotifySwitch.setOnCheckedChangeListener { _, isChecked ->
+            updateNotifyField(isChecked)
+            if (isChecked && dialogBinding.taskNotifyTimeInput.text.isNullOrBlank()) {
+                dialogBinding.taskNotifyTimeInput.setText(DateUtils.formatTime(LocalTime.of(9, 0)))
+            }
+        }
+
+        dialogBinding.taskNotifyTimeInput.setOnClickListener {
+            if (dialogBinding.taskNotifyTimeInput.isEnabled) {
+                showTimePicker(dialogBinding)
+            }
+        }
+        dialogBinding.taskNotifyTimeInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && dialogBinding.taskNotifyTimeInput.isEnabled) {
+                showTimePicker(dialogBinding)
+            }
         }
 
         dialogBinding.taskDateInput.setOnClickListener {
@@ -395,6 +426,21 @@ class MainActivity : AppCompatActivity() {
         picker.show()
     }
 
+    private fun showTimePicker(dialogBinding: DialogEditTaskBinding) {
+        val currentTime = DateUtils.parseTime(dialogBinding.taskNotifyTimeInput.text?.toString()) ?: LocalTime.of(9, 0)
+        val picker = android.app.TimePickerDialog(
+            this,
+            { _, hourOfDay, minute ->
+                val selected = LocalTime.of(hourOfDay, minute)
+                dialogBinding.taskNotifyTimeInput.setText(DateUtils.formatTime(selected))
+            },
+            currentTime.hour,
+            currentTime.minute,
+            true
+        )
+        picker.show()
+    }
+
     private fun saveTaskFromDialog(task: Task?, dialogBinding: DialogEditTaskBinding): Boolean {
         val details = dialogBinding.taskDetailsInput.text?.toString()?.trim().orEmpty()
         if (details.isBlank()) {
@@ -408,6 +454,16 @@ class MainActivity : AppCompatActivity() {
             DateUtils.unassignedDate()
         } else {
             DateUtils.parse(dialogBinding.taskDateInput.text?.toString())
+        }
+        val notifyEnabled = dialogBinding.taskNotifySwitch.isChecked
+        val notifyTime = if (notifyEnabled) {
+            DateUtils.parseTime(dialogBinding.taskNotifyTimeInput.text?.toString())
+        } else {
+            null
+        }
+        if (notifyEnabled && notifyTime == null) {
+            Toast.makeText(this, getString(R.string.notify_time_required), Toast.LENGTH_SHORT).show()
+            return false
         }
 
         val spreadsheetId = AppSettings.getSpreadsheetId(this)
@@ -423,7 +479,17 @@ class MainActivity : AppCompatActivity() {
                 }
                 withContext(Dispatchers.IO) {
                     if (task == null) {
-                        repository.addTask(token, spreadsheetId, details, importance, owner, status, date)
+                        repository.addTask(
+                            token,
+                            spreadsheetId,
+                            details,
+                            importance,
+                            owner,
+                            status,
+                            date,
+                            notifyEnabled,
+                            notifyTime
+                        )
                     } else {
                         repository.updateTask(
                             token,
@@ -433,7 +499,9 @@ class MainActivity : AppCompatActivity() {
                                 importance = importance,
                                 owner = owner,
                                 status = status,
-                                dueDate = date
+                                dueDate = date,
+                                notifyEnabled = notifyEnabled,
+                                notifyTime = notifyTime
                             )
                         )
                     }

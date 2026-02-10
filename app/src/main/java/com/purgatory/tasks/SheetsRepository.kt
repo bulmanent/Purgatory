@@ -1,6 +1,7 @@
 package com.purgatory.tasks
 
 import java.time.LocalDate
+import java.time.LocalTime
 
 class SheetsRepository(private val client: SheetsClient = SheetsClient()) {
     suspend fun loadTasks(accessToken: String, spreadsheetId: String): List<Task> {
@@ -12,13 +13,17 @@ class SheetsRepository(private val client: SheetsClient = SheetsClient()) {
             val owner = AppUsers.byDisplayName(row.getOrNull(2))
             val status = TaskStatus.fromSheet(row.getOrNull(3))
             val date = DateUtils.parse(row.getOrNull(4))
+            val notifyEnabled = DateUtils.parseBoolean(row.getOrNull(5))
+            val notifyTime = DateUtils.parseTime(row.getOrNull(6))
             Task(
                 rowIndex = index + 2,
                 details = details,
                 importance = importance,
                 owner = owner,
                 status = status,
-                dueDate = date
+                dueDate = date,
+                notifyEnabled = notifyEnabled,
+                notifyTime = notifyTime
             )
         }
     }
@@ -30,14 +35,18 @@ class SheetsRepository(private val client: SheetsClient = SheetsClient()) {
         importance: Int,
         owner: AppUser?,
         status: TaskStatus,
-        dueDate: LocalDate?
+        dueDate: LocalDate?,
+        notifyEnabled: Boolean,
+        notifyTime: LocalTime?
     ) {
         val values = listOf(
             details,
             importance.toString(),
             owner?.displayName.orEmpty(),
             status.sheetValue,
-            DateUtils.format(dueDate)
+            DateUtils.format(dueDate),
+            DateUtils.formatBoolean(notifyEnabled),
+            DateUtils.formatTime(notifyTime)
         )
         client.appendTask(accessToken, spreadsheetId, values)
     }
@@ -52,7 +61,9 @@ class SheetsRepository(private val client: SheetsClient = SheetsClient()) {
             task.importance.toString(),
             task.owner?.displayName.orEmpty(),
             task.status.sheetValue,
-            DateUtils.format(task.dueDate)
+            DateUtils.format(task.dueDate),
+            DateUtils.formatBoolean(task.notifyEnabled),
+            DateUtils.formatTime(task.notifyTime)
         )
         client.updateTask(accessToken, spreadsheetId, task.rowIndex, values)
     }

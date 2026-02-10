@@ -19,4 +19,4 @@ A minimal, shared to-do list app backed by Google Sheets.
 
 1. Sign in with Google.
 2. Paste the Spreadsheet ID in Settings.
-3. Ensure the sheet has columns: `Details, Importance, Owner, Status, Date`.
+3. Ensure the sheet has columns: `Details, Importance, Owner, Status, Date, Notify, NotifyTime`.
