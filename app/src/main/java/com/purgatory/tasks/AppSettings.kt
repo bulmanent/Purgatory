@@ -10,7 +10,11 @@ object AppSettings {
     private const val DEFAULT_SPREADSHEET_ID = "1MOrfuWJKrc9QSgryFWTegCz587xXF6JGzGUCqWMeQEk"
 
     fun getDefaultUser(context: Context): String? =
-        prefs(context).getString(KEY_DEFAULT_USER, AppUsers.all.firstOrNull()?.displayName)
+        prefs(context).getString(KEY_DEFAULT_USER, null)
+
+    fun clearDefaultUser(context: Context) {
+        prefs(context).edit().remove(KEY_DEFAULT_USER).apply()
+    }
 
     fun setDefaultUser(context: Context, user: String) {
         prefs(context).edit().putString(KEY_DEFAULT_USER, user).apply()

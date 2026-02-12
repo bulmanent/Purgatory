@@ -8,6 +8,7 @@ import com.purgatory.tasks.databinding.ActivitySettingsBinding
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
+    private lateinit var defaultUserOptions: List<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,14 +19,15 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         val users = AppUsers.all.map { it.displayName }
+        defaultUserOptions = listOf(getString(R.string.filter_all)) + users
         binding.defaultUserInput.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_list_item_1, users)
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, defaultUserOptions)
         )
 
         val defaultUser = AppSettings.getDefaultUser(this)
-        binding.defaultUserInput.setText(defaultUser ?: users.firstOrNull(), false)
+        binding.defaultUserInput.setText(defaultUser ?: getString(R.string.filter_all), false)
         binding.defaultUserInput.setOnItemClickListener { _, _, position, _ ->
-            AppSettings.setDefaultUser(this, users[position])
+            persistDefaultUser(defaultUserOptions[position])
         }
 
         binding.spreadsheetIdInput.setText(AppSettings.getSpreadsheetId(this).orEmpty())
@@ -54,6 +56,26 @@ class SettingsActivity : AppCompatActivity() {
         super.onPause()
         val id = binding.spreadsheetIdInput.text?.toString()?.trim().orEmpty()
         AppSettings.setSpreadsheetId(this, id)
+        persistDefaultUser(binding.defaultUserInput.text?.toString())
+    }
+
+    private fun persistDefaultUser(rawValue: String?) {
+        val selected = rawValue?.trim().orEmpty()
+        val allLabel = getString(R.string.filter_all)
+        if (selected.isBlank() || selected.equals(allLabel, ignoreCase = true)) {
+            AppSettings.clearDefaultUser(this)
+            binding.defaultUserInput.setText(allLabel, false)
+            return
+        }
+
+        val user = AppUsers.byDisplayName(selected)
+        if (user != null) {
+            AppSettings.setDefaultUser(this, user.displayName)
+            binding.defaultUserInput.setText(user.displayName, false)
+        } else {
+            AppSettings.clearDefaultUser(this)
+            binding.defaultUserInput.setText(allLabel, false)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -6,6 +6,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.concurrent.TimeUnit
@@ -26,7 +27,14 @@ object TaskReminderScheduler {
     private fun shouldSchedule(task: Task): Boolean {
         return task.notifyEnabled &&
             task.notifyTime != null &&
-            task.status != TaskStatus.COMPLETE
+            task.status != TaskStatus.COMPLETE &&
+            isWithinScope(task)
+    }
+
+    private fun isWithinScope(task: Task): Boolean {
+        val dueDate = task.dueDate ?: return false
+        val today = LocalDate.now()
+        return !dueDate.isAfter(today.plusDays(7))
     }
 
     private fun schedule(context: Context, task: Task) {

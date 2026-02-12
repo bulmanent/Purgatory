@@ -230,7 +230,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .filter { task ->
-                statusFilter == null || task.status == statusFilter
+                when (viewMode) {
+                    ViewMode.COMPLETED -> true
+                    else -> statusFilter == null || task.status == statusFilter
+                }
             }
             .sortedWith(compareBy<Task> { statusSortKey(it.status) }
                 .thenByDescending { it.importance }
