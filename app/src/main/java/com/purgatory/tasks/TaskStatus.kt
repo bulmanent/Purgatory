@@ -2,8 +2,10 @@ package com.purgatory.tasks
 
 enum class TaskStatus(val sheetValue: String) {
     UNASSIGNED("unassigned"),
+    OVERDUE("overdue"),
     DUE("due"),
     CRUCIAL("crucial"),
+    ANYTIME("anytime"),
     COMPLETE("complete");
 
     companion object {

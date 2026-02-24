@@ -17,5 +17,6 @@
     <color name="owner_both">#6D4C41</color>
     <color name="status_crucial">#C62828</color>
     <color name="status_due">#F57C00</color>
+    <color name="status_overdue">#1A1A1A</color>
     <color name="status_complete">#2E7D32</color>
 </resources>

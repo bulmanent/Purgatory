@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity() {
         binding.addTaskFab.setOnClickListener { showTaskDialog(null) }
         binding.retryButton.setOnClickListener { refreshTasks() }
         binding.taskRefresh.setOnRefreshListener { refreshTasks() }
+        BackgroundTaskSyncScheduler.schedule(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -133,9 +134,11 @@ class MainActivity : AppCompatActivity() {
 
         val statusOptions = listOf(
             getString(R.string.filter_all),
+            getString(R.string.task_status_overdue),
             getString(R.string.task_status_unassigned),
             getString(R.string.task_status_due),
             getString(R.string.task_status_crucial),
+            getString(R.string.task_status_anytime),
             getString(R.string.task_status_complete)
         )
         binding.statusFilterInput.setAdapter(
@@ -145,10 +148,12 @@ class MainActivity : AppCompatActivity() {
         statusFilter = TaskStatus.DUE
         binding.statusFilterInput.setOnItemClickListener { _, _, position, _ ->
             statusFilter = when (position) {
-                1 -> TaskStatus.UNASSIGNED
-                2 -> TaskStatus.DUE
-                3 -> TaskStatus.CRUCIAL
-                4 -> TaskStatus.COMPLETE
+                1 -> TaskStatus.OVERDUE
+                2 -> TaskStatus.UNASSIGNED
+                3 -> TaskStatus.DUE
+                4 -> TaskStatus.CRUCIAL
+                5 -> TaskStatus.ANYTIME
+                6 -> TaskStatus.COMPLETE
                 else -> null
             }
             if (statusFilter == TaskStatus.UNASSIGNED) {
@@ -215,7 +220,13 @@ class MainActivity : AppCompatActivity() {
                 when (viewMode) {
                     ViewMode.COMPLETED -> task.status == TaskStatus.COMPLETE
                     ViewMode.ALL -> true
-                    ViewMode.CURRENT -> isCurrentTask(task)
+                    ViewMode.CURRENT -> {
+                        if (statusFilter == TaskStatus.ANYTIME) {
+                            task.status == TaskStatus.ANYTIME
+                        } else {
+                            isCurrentTask(task)
+                        }
+                    }
                 }
             }
             .filter { task ->
@@ -232,10 +243,16 @@ class MainActivity : AppCompatActivity() {
             .filter { task ->
                 when (viewMode) {
                     ViewMode.COMPLETED -> true
-                    else -> statusFilter == null || task.status == statusFilter
+                    else -> {
+                        when (statusFilter) {
+                            null -> true
+                            TaskStatus.OVERDUE -> task.displayStatus() == TaskStatus.OVERDUE
+                            else -> task.status == statusFilter
+                        }
+                    }
                 }
             }
-            .sortedWith(compareBy<Task> { statusSortKey(it.status) }
+            .sortedWith(compareBy<Task> { statusSortKey(it.displayStatus()) }
                 .thenByDescending { it.importance }
                 .thenBy { it.dueDate ?: LocalDate.MAX })
 
@@ -247,20 +264,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun statusSortKey(status: TaskStatus): Int {
         return when (status) {
-            TaskStatus.CRUCIAL -> 0
-            TaskStatus.DUE -> 1
-            TaskStatus.UNASSIGNED -> 2
-            TaskStatus.COMPLETE -> 3
+            TaskStatus.OVERDUE -> 0
+            TaskStatus.CRUCIAL -> 1
+            TaskStatus.DUE -> 2
+            TaskStatus.UNASSIGNED -> 3
+            TaskStatus.ANYTIME -> 4
+            TaskStatus.COMPLETE -> 5
         }
     }
 
     private fun isCurrentTask(task: Task): Boolean {
+        if (task.status == TaskStatus.ANYTIME) return false
+        if (task.status == TaskStatus.OVERDUE) return true
         if (task.status == TaskStatus.CRUCIAL) return true
         if (task.status == TaskStatus.UNASSIGNED) return true
         if (task.status == TaskStatus.COMPLETE) return false
         val date = task.dueDate ?: return false
         val today = LocalDate.now()
-        return date.isBefore(today) || !date.isAfter(today.plusDays(7))
+        return task.isOverdue(today) || !date.isAfter(today.plusDays(7))
     }
 
     private fun toggleComplete(task: Task) {
@@ -303,6 +324,7 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.task_status_unassigned),
             getString(R.string.task_status_due),
             getString(R.string.task_status_crucial),
+            getString(R.string.task_status_anytime),
             getString(R.string.task_status_complete)
         )
 
@@ -332,14 +354,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun updateDateField(status: TaskStatus) {
-            if (status == TaskStatus.UNASSIGNED) {
-                dialogBinding.taskDateInput.setText(DateUtils.format(DateUtils.unassignedDate()))
-                dialogBinding.taskDateInput.isEnabled = false
-            } else {
-                if (!dialogBinding.taskDateInput.isEnabled) {
-                    dialogBinding.taskDateInput.setText(DateUtils.format(LocalDate.now()))
+            when (status) {
+                TaskStatus.UNASSIGNED -> {
+                    dialogBinding.taskDateInput.setText(DateUtils.format(DateUtils.unassignedDate()))
+                    dialogBinding.taskDateInput.isEnabled = false
                 }
-                dialogBinding.taskDateInput.isEnabled = true
+                TaskStatus.ANYTIME -> {
+                    dialogBinding.taskDateInput.setText("")
+                    dialogBinding.taskDateInput.isEnabled = false
+                }
+                else -> {
+                    if (!dialogBinding.taskDateInput.isEnabled) {
+                        dialogBinding.taskDateInput.setText(DateUtils.format(LocalDate.now()))
+                    }
+                    dialogBinding.taskDateInput.isEnabled = true
+                }
             }
         }
 
@@ -358,7 +387,8 @@ class MainActivity : AppCompatActivity() {
                 0 -> TaskStatus.UNASSIGNED
                 1 -> TaskStatus.DUE
                 2 -> TaskStatus.CRUCIAL
-                3 -> TaskStatus.COMPLETE
+                3 -> TaskStatus.ANYTIME
+                4 -> TaskStatus.COMPLETE
                 else -> TaskStatus.DUE
             }
             updateDateField(status)
@@ -453,10 +483,10 @@ class MainActivity : AppCompatActivity() {
         val importance = dialogBinding.taskImportanceInput.text?.toString()?.toIntOrNull() ?: 0
         val owner = AppUsers.byDisplayName(dialogBinding.taskOwnerInput.text?.toString())
         val status = TaskStatus.fromSheet(dialogBinding.taskStatusInput.text?.toString())
-        val date = if (status == TaskStatus.UNASSIGNED) {
-            DateUtils.unassignedDate()
-        } else {
-            DateUtils.parse(dialogBinding.taskDateInput.text?.toString())
+        val date = when (status) {
+            TaskStatus.UNASSIGNED -> DateUtils.unassignedDate()
+            TaskStatus.ANYTIME -> null
+            else -> DateUtils.parse(dialogBinding.taskDateInput.text?.toString())
         }
         val notifyEnabled = dialogBinding.taskNotifySwitch.isChecked
         val notifyTime = if (notifyEnabled) {

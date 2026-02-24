@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.purgatory.tasks.databinding.ItemTaskBinding
+import java.time.LocalDate
 
 class TaskAdapter(
     private val onActionClicked: (Task) -> Unit,
@@ -35,11 +36,14 @@ class TaskAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(task: Task) {
+            val today = LocalDate.now()
+            val displayStatus = task.displayStatus(today)
             binding.taskDetails.text = task.details
 
             val ownerName = task.owner?.displayName ?: "-"
             val dueText = when {
                 task.status == TaskStatus.UNASSIGNED -> binding.root.context.getString(R.string.task_unassigned)
+                task.status == TaskStatus.ANYTIME -> binding.root.context.getString(R.string.task_anytime)
                 task.dueDate != null -> DateUtils.format(task.dueDate)
                 else -> "-"
             }
@@ -48,17 +52,21 @@ class TaskAdapter(
                     "${binding.root.context.getString(R.string.importance_label)}: ${task.importance} · " +
                     "${binding.root.context.getString(R.string.task_due_label)}: $dueText"
 
-            val statusLabel = when (task.status) {
+            val statusLabel = when (displayStatus) {
                 TaskStatus.UNASSIGNED -> binding.root.context.getString(R.string.task_unassigned)
+                TaskStatus.OVERDUE -> binding.root.context.getString(R.string.task_overdue)
                 TaskStatus.DUE -> binding.root.context.getString(R.string.task_due)
                 TaskStatus.CRUCIAL -> binding.root.context.getString(R.string.task_crucial)
+                TaskStatus.ANYTIME -> binding.root.context.getString(R.string.task_anytime)
                 TaskStatus.COMPLETE -> binding.root.context.getString(R.string.task_complete)
             }
             binding.taskStatus.text = statusLabel
-            val statusColor = when (task.status) {
+            val statusColor = when (displayStatus) {
+                TaskStatus.OVERDUE -> R.color.status_overdue
                 TaskStatus.CRUCIAL -> R.color.status_crucial
                 TaskStatus.DUE -> R.color.status_due
                 TaskStatus.COMPLETE -> R.color.status_complete
+                TaskStatus.ANYTIME -> R.color.ink_600
                 TaskStatus.UNASSIGNED -> R.color.ink_600
             }
             binding.taskStatus.setBackgroundColor(
@@ -79,7 +87,14 @@ class TaskAdapter(
             binding.taskActionButton.setOnClickListener { onActionClicked(task) }
             binding.root.setOnClickListener { onItemClicked(task) }
             binding.taskActionButton.visibility =
-                if (task.status == TaskStatus.UNASSIGNED || task.status == TaskStatus.DUE || task.status == TaskStatus.CRUCIAL || task.status == TaskStatus.COMPLETE) {
+                if (
+                    task.status == TaskStatus.UNASSIGNED ||
+                    task.status == TaskStatus.OVERDUE ||
+                    task.status == TaskStatus.DUE ||
+                    task.status == TaskStatus.CRUCIAL ||
+                    task.status == TaskStatus.ANYTIME ||
+                    task.status == TaskStatus.COMPLETE
+                ) {
                     View.VISIBLE
                 } else {
                     View.GONE

@@ -13,3 +13,18 @@ data class Task(
     val notifyEnabled: Boolean,
     val notifyTime: LocalTime?
 )
+
+fun Task.isOverdue(today: LocalDate = LocalDate.now()): Boolean {
+    if (status == TaskStatus.COMPLETE || status == TaskStatus.UNASSIGNED || status == TaskStatus.ANYTIME) {
+        return false
+    }
+    return dueDate?.isBefore(today) == true
+}
+
+fun Task.displayStatus(today: LocalDate = LocalDate.now()): TaskStatus {
+    return if (status == TaskStatus.OVERDUE || isOverdue(today)) {
+        TaskStatus.OVERDUE
+    } else {
+        status
+    }
+}
