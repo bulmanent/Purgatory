@@ -1,27 +1,6 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="#F9F4EC"
-        android:pathData="M30,18 H78 A6,6 0 0,1 84,24 V76 A6,6 0 0,1 78,82 H30 A6,6 0 0,1 24,76 V24 A6,6 0 0,1 30,18 Z" />
-    <path
-        android:fillColor="#D8CBBE"
-        android:pathData="M34,30 H74 V34 H34 Z" />
-    <path
-        android:fillColor="#D8CBBE"
-        android:pathData="M34,40 H70 V44 H34 Z" />
-    <path
-        android:fillColor="#D8CBBE"
-        android:pathData="M34,50 H68 V54 H34 Z" />
-    <path
-        android:fillColor="#FFB347"
-        android:pathData="M38,84 C38,76 44,72 46,66 C47,72 52,76 52,84 C52,90 47,94 45,94 C41,94 38,90 38,84 Z" />
-    <path
-        android:fillColor="#FF7A2F"
-        android:pathData="M52,86 C52,78 58,74 60,68 C61,74 66,78 66,86 C66,92 61,96 59,96 C55,96 52,92 52,86 Z" />
-    <path
-        android:fillColor="#E5441C"
-        android:pathData="M66,84 C66,76 72,72 74,66 C75,72 80,76 80,84 C80,90 75,94 73,94 C69,94 66,90 66,84 Z" />
-</vector>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:inset="10dp">
+    <bitmap
+        android:gravity="center"
+        android:src="@drawable/ic_launcher_foreground_image" />
+</inset>
