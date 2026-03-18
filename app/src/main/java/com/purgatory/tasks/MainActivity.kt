@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.tabs.TabLayout
 import com.purgatory.tasks.databinding.ActivityMainBinding
 import com.purgatory.tasks.databinding.DialogEditTaskBinding
 import com.purgatory.tasks.eventtracker.EventTrackerActivity
@@ -50,9 +51,23 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.mainToolbar)
+        supportActionBar?.title = null
 
         binding.taskList.layoutManager = LinearLayoutManager(this)
         binding.taskList.adapter = taskAdapter
+        binding.topTabs.selectTab(binding.topTabs.getTabAt(0))
+        binding.topTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                if (tab.position == 1) {
+                    startActivity(Intent(this@MainActivity, EventTrackerActivity::class.java))
+                    overridePendingTransition(0, 0)
+                }
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) = Unit
+
+            override fun onTabReselected(tab: TabLayout.Tab) = Unit
+        })
 
         binding.viewToggleGroup.check(R.id.viewCurrentButton)
         binding.viewToggleGroup.addOnButtonCheckedListener { _, checkedId, _ ->
@@ -96,10 +111,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_event_tracker -> {
-                startActivity(Intent(this, EventTrackerActivity::class.java))
-                true
-            }
             R.id.action_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true

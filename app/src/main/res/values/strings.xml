@@ -4,6 +4,8 @@
     <string name="tasks_current">Current</string>
     <string name="tasks_completed">Completed</string>
     <string name="tasks_all">All</string>
+    <string name="tab_todo_list">To-do list</string>
+    <string name="tab_event_tracker">Event tracker</string>
     <string name="filter_owner">Owner</string>
     <string name="filter_status">Status</string>
     <string name="filter_all">All</string>
@@ -87,6 +89,7 @@
     <string name="event_log_empty">-</string>
     <string name="event_report">Report</string>
     <string name="event_report_success">Report exported to Google Sheets (Report tab) — %1$d rows written.</string>
+    <string name="event_report_success_single">%1$s exported to Google Sheets (Report tab) — %2$d rows written.</string>
     <string name="event_report_close">Close</string>
     <string name="event_report_copy_csv">Copy as CSV</string>
     <string name="event_report_copied">Copied!</string>

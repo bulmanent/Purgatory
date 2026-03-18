@@ -15,9 +15,29 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/ink_900"
-            android:title="@string/app_name"
             android:titleTextColor="@color/surface_alt"
             app:menu="@menu/main_menu" />
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/topTabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/ink_900"
+            app:tabIndicatorColor="@color/surface_alt"
+            app:tabIndicatorFullWidth="false"
+            app:tabSelectedTextColor="@color/surface_alt"
+            app:tabTextColor="@color/surface_alt">
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tab_todo_list" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tab_event_tracker" />
+        </com.google.android.material.tabs.TabLayout>
 
         <LinearLayout
             android:id="@+id/filterContainer"

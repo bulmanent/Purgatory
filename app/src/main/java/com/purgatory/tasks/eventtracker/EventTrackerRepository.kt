@@ -11,12 +11,13 @@ class EventTrackerRepository(
     private val context: Context,
     private val client: EventTrackerSheetsClient = EventTrackerSheetsClient()
 ) {
+    private val eventTypeSheetRange = "Events!A:A"
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     suspend fun getEventTypes(): List<EventType> {
         val (token, spreadsheetId) = resolveCredentials()
-        val rows = client.fetchRange(token, spreadsheetId, "EventTracker!J2:J")
-        val names = readContiguousEventNames(rows)
+        val rows = client.fetchRange(token, spreadsheetId, eventTypeSheetRange)
+        val names = readEventNames(rows)
         return names
             .sortedBy { it.lowercase() }
             .map { EventType(it) }
@@ -30,19 +31,13 @@ class EventTrackerRepository(
 
         return runCatching {
             val (token, spreadsheetId) = resolveCredentials()
-            val rows = client.fetchRange(token, spreadsheetId, "EventTracker!J2:J")
-            val existingNames = readContiguousEventNames(rows)
+            val rows = client.fetchRange(token, spreadsheetId, eventTypeSheetRange)
+            val existingNames = readEventNames(rows)
             if (existingNames.any { it.equals(newName, ignoreCase = true) }) {
                 throw IllegalStateException("Event already exists")
             }
 
-            val nextRow = existingNames.size + 2
-            client.updateRange(
-                token,
-                spreadsheetId,
-                "EventTracker!J$nextRow",
-                listOf(listOf(newName))
-            )
+            client.appendRange(token, spreadsheetId, eventTypeSheetRange, listOf(newName))
         }
     }
 
@@ -121,16 +116,14 @@ class EventTrackerRepository(
         }
     }
 
-    private fun readContiguousEventNames(rows: List<List<String>>): List<String> {
-        val names = mutableListOf<String>()
-        for (row in rows) {
-            val value = row.getOrNull(0)?.trim().orEmpty()
-            if (value.isBlank()) {
-                break
+    private fun readEventNames(rows: List<List<String>>): List<String> {
+        return rows
+            .mapNotNull { row -> row.getOrNull(0)?.trim() }
+            .filter { value ->
+                value.isNotBlank() &&
+                    !value.equals("Event", ignoreCase = true) &&
+                    !value.equals("Event Type", ignoreCase = true)
             }
-            names.add(value)
-        }
-        return names
     }
 
     private fun resolveCredentials(): Pair<String, String> {
