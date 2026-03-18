@@ -42,9 +42,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/event_log_plus"
                 android:textColor="@android:color/white"
-                android:backgroundTint="@color/event_tracker_accent"
-                app:icon="@android:drawable/ic_input_add"
-                app:iconTint="@android:color/white" />
+                android:backgroundTint="@color/event_tracker_accent" />
         </LinearLayout>
 
         <FrameLayout
