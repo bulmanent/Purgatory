@@ -40,6 +40,7 @@ class EventTrackerActivity : AppCompatActivity() {
     )
 
     private var reportInProgress = false
+    private var currentEventTypes: List<EventType> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,6 +97,7 @@ class EventTrackerActivity : AppCompatActivity() {
                 val eventTypes = withContext(Dispatchers.IO) {
                     repository.getEventTypes()
                 }
+                currentEventTypes = eventTypes
                 eventTypeAdapter.submitList(eventTypes)
                 showEmptyState(eventTypes.isEmpty())
             } catch (ex: Exception) {
@@ -173,19 +175,56 @@ class EventTrackerActivity : AppCompatActivity() {
     }
 
     private fun exportReport() {
+        if (currentEventTypes.isEmpty()) {
+            showSnackbar(getString(R.string.event_report_no_items), Snackbar.LENGTH_SHORT)
+            return
+        }
+        showReportSelectionDialog()
+    }
+
+    private fun showReportSelectionDialog() {
+        val eventNames = currentEventTypes.map { it.name }.toTypedArray()
+        val checked = BooleanArray(eventNames.size) { true }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.event_report_select_title)
+            .setMultiChoiceItems(eventNames, checked) { _, which, isChecked ->
+                checked[which] = isChecked
+            }
+            .setPositiveButton(R.string.event_report_generate, null)
+            .setNegativeButton(R.string.task_cancel, null)
+            .create()
+            .also { dialog ->
+                dialog.setOnShowListener {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        val selectedNames = eventNames
+                            .filterIndexed { index, _ -> checked[index] }
+                            .toList()
+                        if (selectedNames.isEmpty()) {
+                            showSnackbar(getString(R.string.event_report_select_required), Snackbar.LENGTH_SHORT)
+                            return@setOnClickListener
+                        }
+                        dialog.dismiss()
+                        exportReportSelection(selectedNames)
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun exportReportSelection(selectedNames: List<String>) {
         reportInProgress = true
         invalidateOptionsMenu()
 
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
-                repository.exportToReport()
+                repository.exportToReport(selectedNames)
             }
             reportInProgress = false
             invalidateOptionsMenu()
 
             if (result.isSuccess) {
                 val rowCount = result.getOrNull() ?: 0
-                showReportSuccessDialog(rowCount)
+                showReportSuccessDialog(rowCount, selectedNames)
             } else {
                 showSnackbar(
                     result.exceptionOrNull()?.message ?: getString(R.string.event_error_generic),
@@ -195,7 +234,7 @@ class EventTrackerActivity : AppCompatActivity() {
         }
     }
 
-    private fun showReportSuccessDialog(rowCount: Int) {
+    private fun showReportSuccessDialog(rowCount: Int, selectedNames: List<String>) {
         val dialog = MaterialAlertDialogBuilder(this)
             .setMessage(getString(R.string.event_report_success, rowCount))
             .setPositiveButton(R.string.event_report_close, null)
@@ -209,6 +248,9 @@ class EventTrackerActivity : AppCompatActivity() {
                     try {
                         val entries = withContext(Dispatchers.IO) {
                             repository.getEventLog(null)
+                                .filter { entry ->
+                                    selectedNames.any { it.equals(entry.event, ignoreCase = true) }
+                                }
                         }
                         val csv = buildCsv(entries)
                         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

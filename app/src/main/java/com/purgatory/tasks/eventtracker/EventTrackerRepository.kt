@@ -92,9 +92,16 @@ class EventTrackerRepository(
             }
     }
 
-    suspend fun exportToReport(): Result<Int> {
+    suspend fun exportToReport(eventNames: List<String>? = null): Result<Int> {
         return runCatching {
-            val entries = getEventLog(null)
+            val selectedNames = eventNames
+                ?.map { it.trim() }
+                ?.filter { it.isNotBlank() }
+                ?.toSet()
+                .orEmpty()
+            val entries = getEventLog(null).filter { entry ->
+                selectedNames.isEmpty() || selectedNames.any { it.equals(entry.event, ignoreCase = true) }
+            }
             val (token, spreadsheetId) = resolveCredentials()
             val allRows = mutableListOf(
                 listOf("Event", "Date", "Time", "Details", "Severity", "Action")

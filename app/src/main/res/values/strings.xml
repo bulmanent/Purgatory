@@ -65,7 +65,7 @@
     <string name="notification_title">Check Purgatory</string>
     <string name="notification_body">Open the list and take care of what matters today.</string>
     <string name="event_tracker_title">Event Tracker</string>
-    <string name="event_new_type">+ New Event Type</string>
+    <string name="event_new_type">New Event Type</string>
     <string name="event_empty_state">No event types yet. Add one to get started.</string>
     <string name="event_details">Details</string>
     <string name="event_log_plus">+ Log</string>
@@ -90,4 +90,8 @@
     <string name="event_report_close">Close</string>
     <string name="event_report_copy_csv">Copy as CSV</string>
     <string name="event_report_copied">Copied!</string>
+    <string name="event_report_select_title">Choose events for report</string>
+    <string name="event_report_generate">Generate</string>
+    <string name="event_report_select_required">Select at least one event type.</string>
+    <string name="event_report_no_items">No event types available to report.</string>
 </resources>

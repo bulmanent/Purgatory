@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import android.view.WindowManager
 
 object EventLogDialogHelper {
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -40,13 +41,14 @@ object EventLogDialogHelper {
         val dialog = MaterialAlertDialogBuilder(activity)
             .setTitle(R.string.event_log_title)
             .setView(dialogBinding.root)
-            .setPositiveButton(R.string.task_save, null)
-            .setNegativeButton(R.string.task_cancel, null)
             .create()
 
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
         dialog.setOnShowListener {
-            val saveButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
-            val cancelButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
+            val saveButton = dialogBinding.logSaveButton
+            val cancelButton = dialogBinding.logCancelButton
+            cancelButton.setOnClickListener { dialog.dismiss() }
             saveButton.setOnClickListener {
                 setSavingState(dialogBinding, saveButton, cancelButton, true)
                 activity.lifecycleScope.launch {
@@ -85,8 +87,8 @@ object EventLogDialogHelper {
 
     private fun setSavingState(
         binding: DialogLogEventBinding,
-        saveButton: android.widget.Button,
-        cancelButton: android.widget.Button,
+        saveButton: com.google.android.material.button.MaterialButton,
+        cancelButton: com.google.android.material.button.MaterialButton,
         isSaving: Boolean
     ) {
         binding.logEventProgress.visibility = if (isSaving) android.view.View.VISIBLE else android.view.View.GONE
