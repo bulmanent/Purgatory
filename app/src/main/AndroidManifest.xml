@@ -21,6 +21,12 @@
         <activity
             android:name="com.purgatory.tasks.SettingsActivity"
             android:exported="false" />
+        <activity
+            android:name="com.purgatory.tasks.eventtracker.EventTrackerActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.purgatory.tasks.eventtracker.EventDetailActivity"
+            android:exported="false" />
 
     </application>
 

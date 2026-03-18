@@ -19,4 +19,7 @@
     <color name="status_due">#F57C00</color>
     <color name="status_overdue">#1A1A1A</color>
     <color name="status_complete">#2E7D32</color>
+    <color name="event_tracker_primary">#1A3A4A</color>
+    <color name="event_tracker_background">#E8F4F8</color>
+    <color name="event_tracker_accent">#2A7F8F</color>
 </resources>
