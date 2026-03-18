@@ -70,7 +70,7 @@
     <string name="event_new_type">New Event Type</string>
     <string name="event_empty_state">No event types yet. Add one to get started.</string>
     <string name="event_details">Details</string>
-    <string name="event_log_plus">+ Log</string>
+    <string name="event_log_plus">+</string>
     <string name="event_add_type_title">Add New Event Type</string>
     <string name="event_type_required">Event name is required</string>
     <string name="event_type_saved">Event type added.</string>

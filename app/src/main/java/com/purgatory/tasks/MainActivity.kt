@@ -55,7 +55,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.taskList.layoutManager = LinearLayoutManager(this)
         binding.taskList.adapter = taskAdapter
-        binding.topTabs.selectTab(binding.topTabs.getTabAt(0))
         binding.topTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 if (tab.position == 1) {
@@ -97,6 +96,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        binding.topTabs.getTabAt(0)?.select()
         setupFilters()
         if (intent.getBooleanExtra(EXTRA_FORCE_REFRESH, false)) {
             intent.removeExtra(EXTRA_FORCE_REFRESH)

@@ -14,18 +14,22 @@
             android:id="@+id/eventTrackerToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/event_tracker_primary"
-            android:titleTextColor="@android:color/white" />
+            android:backgroundTint="@color/surface_alt"
+            android:elevation="0dp"
+            android:titleTextColor="@color/ink_900" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/topTabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/event_tracker_primary"
-            app:tabIndicatorColor="@android:color/white"
+            android:background="@color/surface_alt"
+            android:elevation="0dp"
+            app:tabIndicatorColor="@color/event_tracker_primary"
             app:tabIndicatorFullWidth="false"
-            app:tabSelectedTextColor="@android:color/white"
-            app:tabTextColor="@android:color/white">
+            app:tabIndicatorHeight="2dp"
+            app:tabRippleColor="@android:color/transparent"
+            app:tabSelectedTextColor="@color/event_tracker_primary"
+            app:tabTextColor="@color/ink_600">
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
@@ -37,6 +41,11 @@
                 android:layout_height="wrap_content"
                 android:text="@string/tab_event_tracker" />
         </com.google.android.material.tabs.TabLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/ink_600" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/newEventTypeButton"

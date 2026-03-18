@@ -43,7 +43,6 @@ class EventTrackerActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.eventTrackerToolbar)
         supportActionBar?.title = null
-        binding.topTabs.selectTab(binding.topTabs.getTabAt(1))
         binding.topTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 if (tab.position == 0) {
@@ -78,6 +77,7 @@ class EventTrackerActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        binding.topTabs.getTabAt(1)?.select()
         loadEventTypes()
     }
 

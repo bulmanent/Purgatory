@@ -11,7 +11,7 @@ class EventTrackerRepository(
     private val context: Context,
     private val client: EventTrackerSheetsClient = EventTrackerSheetsClient()
 ) {
-    private val eventTypeSheetRange = "Events!A:A"
+    private val eventTypeSheetRange = "Events!A2:A"
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     suspend fun getEventTypes(): List<EventType> {

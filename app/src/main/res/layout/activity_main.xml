@@ -14,19 +14,23 @@
             android:id="@+id/mainToolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/ink_900"
-            android:titleTextColor="@color/surface_alt"
+            android:backgroundTint="@color/surface_alt"
+            android:elevation="0dp"
+            android:titleTextColor="@color/ink_900"
             app:menu="@menu/main_menu" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/topTabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/ink_900"
-            app:tabIndicatorColor="@color/surface_alt"
+            android:background="@color/surface_alt"
+            android:elevation="0dp"
+            app:tabIndicatorColor="@color/ink_900"
             app:tabIndicatorFullWidth="false"
-            app:tabSelectedTextColor="@color/surface_alt"
-            app:tabTextColor="@color/surface_alt">
+            app:tabIndicatorHeight="2dp"
+            app:tabRippleColor="@android:color/transparent"
+            app:tabSelectedTextColor="@color/ink_900"
+            app:tabTextColor="@color/ink_600">
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
@@ -38,6 +42,11 @@
                 android:layout_height="wrap_content"
                 android:text="@string/tab_event_tracker" />
         </com.google.android.material.tabs.TabLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/ink_600" />
 
         <LinearLayout
             android:id="@+id/filterContainer"
